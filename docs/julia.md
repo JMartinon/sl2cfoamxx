@@ -16,8 +16,6 @@ From the repository root:
 
 ```sh
 cmake -S . -B build-julia \
-  -DCMAKE_CXX_COMPILER=/path/to/g++ \
-  -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_TESTING=OFF \
   -DSL2CFOAMXX_BUILD_JULIA=ON \
   -DJulia_EXECUTABLE=/path/to/julia

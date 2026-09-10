@@ -65,8 +65,6 @@ For an A100 (`sm_80`), use a separate build:
 
 ```sh
 cmake -S . -B build-cuda \
-  -DCMAKE_CXX_COMPILER=/path/to/g++ \
-  -DCMAKE_BUILD_TYPE=Release \
   -DENABLE_CUDA=ON \
   -DCUDA_ARCHITECTURES=80 \
   -DCUTENSOR_ROOT=/path/to/cutensor \
@@ -116,7 +114,6 @@ For AMD AOCL on Linux, use CMake 3.27 or newer:
 
 ```sh
 cmake -S . -B build-aocl \
-  -DCMAKE_CXX_COMPILER=/path/to/g++ \
   -DBLA_VENDOR=AOCL \
   -DCMAKE_PREFIX_PATH=/path/to/aocl
 cmake --build build-aocl --parallel
@@ -220,8 +217,6 @@ Tests are **OFF by default**. Opt in to the public API integration suite:
 
 ```sh
 cmake -S . -B build-tests \
-  -DCMAKE_CXX_COMPILER=/path/to/g++ \
-  -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_TESTING=ON
 cmake --build build-tests --parallel
 ctest --test-dir build-tests --output-on-failure

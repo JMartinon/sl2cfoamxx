@@ -2,8 +2,7 @@ cff-version: 1.2.0
 message: >
   The scientific article accompanying sl2cfoam++ is forthcoming.
   Its citation will be added as preferred-citation when publication
-  details are available. Until then, please cite the software using
-  the metadata below.
+  details are available. 
 type: software
 title: "sl2cfoam++"
 authors:

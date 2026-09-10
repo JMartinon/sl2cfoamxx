@@ -113,7 +113,6 @@ With GNU C++, CMake, a CBLAS provider, Python/NumPy, and Julia available:
 
 ```sh
 cmake -S . -B build-tests \
-  -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=/path/to/g++ \
   -DBUILD_TESTING=ON -DSL2CFOAMXX_BUILD_PYTHON=ON \
   -DSL2CFOAMXX_BUILD_JULIA=ON
 cmake --build build-tests --parallel 2

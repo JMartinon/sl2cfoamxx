@@ -55,8 +55,6 @@ interpreter if applicable:
 ```sh
 python3 -m pip install numpy
 cmake -S . -B build-python \
-  -DCMAKE_CXX_COMPILER=/path/to/g++ \
-  -DCMAKE_BUILD_TYPE=Release \
   -DSL2CFOAMXX_BUILD_PYTHON=ON \
   -DPython_EXECUTABLE="$(command -v python3)" \
   -DBUILD_TESTING=OFF

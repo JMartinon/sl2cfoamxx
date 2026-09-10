@@ -73,7 +73,7 @@ Julia and Mathematica wrappers need no additional binding framework.
 ## Installation
 
 From the repository root, choose an install prefix:
-
+##### CPU
 ```sh
 cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/path/to/sl2cfoamxx-install
 cmake --build build --parallel
@@ -86,9 +86,19 @@ default C++ compiler must be GNU, or select one with `-DCMAKE_CXX_COMPILER=...`.
 CPU tuning for the build machine is enabled by default. Use
 `-DENABLE_NATIVE_ARCH=OFF` when building binaries for other CPU models.
 **Tests and optional language wrappers are OFF by
-default.** To enable a wrapper, add its switch from the table below. For GPU
-builds, add `-DENABLE_CUDA=ON`, select the target CUDA architecture, and provide
-cuTENSOR as explained in the [build guide](docs/building.md#nvidia-gpus).
+default.** To enable a wrapper, add its switch from the table below. 
+
+##### GPU
+```sh
+cmake -S . -B build-cuda \
+  -DENABLE_CUDA=ON \
+  -DCUDA_ARCHITECTURES=XX \
+  -DCUTENSOR_ROOT=/path/to/cutensor \
+  -DCMAKE_INSTALL_PREFIX=/path/to/sl2cfoamxx-install
+cmake --build build-cuda --parallel
+cmake --install build-cuda
+```
+With `CUDA_ARCHITECTURES=XX` being the GPU architecture (*e.g.*  80 for A100, 70 for V100), further details in [build guide](docs/building.md#nvidia-gpus).
 
 The [build guide](docs/building.md) covers GPU/BLAS setup, all CMake option
 defaults, troubleshooting, and opt-in integration tests.
@@ -130,19 +140,16 @@ a capitalized naming convention; they wrap the same library. Julia recommends
 The scientific article accompanying **sl2cfoam++** is forthcoming. Its citation
 will be added here when the publication details are available.
 
-> **Article citation placeholder:** [Authors], *[Article title]*,
-> [Journal or preprint archive], [Year], [DOI or arXiv identifier].
-
-This placeholder is not a bibliographic record. Until the article is available,
-you can cite the version of the software used in your work:
-
+This placeholder is not a bibliographic record.
 ```bibtex
-@misc{sl2cfoamxx,
-    author       = {Jeremy Martinon},
-    title        = {{sl2cfoam++}: High-performance numerical tools for Lorentzian spin-foam amplitudes},
-    year         = {2026},
-    version      = {1.0.0},
-    url          = {https://github.com/JMartinon/sl2cfoamxx}
+@article{sl2cfoamxx,
+    author        = {Jeremy Martinon},
+    title         = {sl2cfoam++: A new library for the computation of the EPRL spin-foam vertex amplitude.},
+    year          = {2026},
+    journal       = {TBD},
+    eprint.       = {TBD},
+    archivePrefix = {arXiv},
+    url = {https://github.com/JMartinon/sl2cfoamxx}
 }
 ```
 

@@ -26,8 +26,6 @@ From the repository root:
 
 ```sh
 cmake -S . -B build-mathematica \
-  -DCMAKE_CXX_COMPILER=/path/to/g++ \
-  -DCMAKE_BUILD_TYPE=Release \
   -DSL2CFOAMXX_BUILD_MATHEMATICA=ON \
   -DWolfram_ROOT=/path/to/Wolfram
 cmake --build build-mathematica --parallel
