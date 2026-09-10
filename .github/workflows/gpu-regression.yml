@@ -1,0 +1,144 @@
+# SPDX-FileCopyrightText: 2026 Jeremy Martinon
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: GPU regression
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  workstation:
+    name: GPU / Workstation
+    if: github.repository == 'JMartinon/sl2cfoamxx' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      # This job only requests and observes a trusted Workstation run. It does
+      # not check out source code or expose a self-hosted runner to this repo.
+      - name: Request and await Workstation regression
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import subprocess
+          import sys
+          import time
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          sha = os.environ["GITHUB_SHA"]
+          run_id = os.environ["GITHUB_RUN_ID"]
+          attempt = os.environ["GITHUB_RUN_ATTEMPT"]
+          if (
+              repository != "JMartinon/sl2cfoamxx"
+              or os.environ["GITHUB_REF"] != "refs/heads/main"
+              or os.environ["GITHUB_EVENT_NAME"] not in {"push", "workflow_dispatch"}
+              or not re.fullmatch(r"[0-9a-f]{40}", sha)
+              or not re.fullmatch(r"[1-9][0-9]*", run_id)
+              or not re.fullmatch(r"[1-9][0-9]*", attempt)
+          ):
+              sys.exit("GPU regression accepts only this repository's main branch.")
+
+          context = "GPU / Workstation"
+          prefix = f"GPU {run_id}.{attempt}: "
+          target_url = f"https://github.com/{repository}/actions/runs/{run_id}"
+          endpoint = f"repos/{repository}/commits/{sha}/statuses?per_page=100"
+          deadline = time.monotonic() + 40 * 60
+
+          def api(*arguments, payload=None):
+              result = subprocess.run(
+                  ["gh", "api", *arguments],
+                  input=None if payload is None else json.dumps(payload),
+                  text=True,
+                  capture_output=True,
+                  timeout=60,
+              )
+              if result.returncode:
+                  raise RuntimeError("GitHub status API request failed")
+              return json.loads(result.stdout)
+
+          def post(state, description):
+              api(
+                  "--method", "POST", f"repos/{repository}/statuses/{sha}",
+                  "--input", "-",
+                  payload={
+                      "state": state,
+                      "context": context,
+                      "description": prefix + description,
+                      "target_url": target_url,
+                  },
+              )
+
+          def summarize(message):
+              print(message, flush=True)
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+                  summary.write(f"{message}\n\nExact revision: `{sha}`.\n")
+
+          print(f"Requested GPU regression for exact revision {sha}.", flush=True)
+          print(
+              "Workstation discovery takes up to one minute, followed by its queue "
+              "and build. Waiting up to 40 minutes; rerun when it is online if timed out.",
+              flush=True,
+          )
+          try:
+              post("pending", "Waiting for Workstation")
+          except (RuntimeError, subprocess.TimeoutExpired, ValueError):
+              summarize("Could not request GPU regression. Rerun this workflow.")
+              sys.exit(1)
+
+          api_unavailable = False
+          while time.monotonic() < deadline:
+              try:
+                  pages = api(endpoint, "--paginate", "--slurp")
+                  matching = [
+                      status
+                      for page in pages
+                      for status in page
+                      if status.get("context") == context
+                      and (status.get("description") or "").startswith(prefix)
+                  ]
+                  latest = max(matching, key=lambda status: status["id"], default=None)
+                  if api_unavailable:
+                      print("GitHub status API is available again.", flush=True)
+                      api_unavailable = False
+              except (RuntimeError, subprocess.TimeoutExpired, ValueError):
+                  if not api_unavailable:
+                      print("GitHub status API is temporarily unavailable; retrying.", flush=True)
+                      api_unavailable = True
+                  time.sleep(20)
+                  continue
+
+              state = None if latest is None else latest.get("state")
+              if state == "success":
+                  summarize("All nine CPU, GPU, and Mathematica workflows passed on the V100 Workstation.")
+                  sys.exit(0)
+              if state in {"failure", "error"}:
+                  summarize(
+                      "Workstation regression failed. Investigate the Workstation run; "
+                      "rerun after correcting the failure or restoring the machine."
+                  )
+                  sys.exit(1)
+              time.sleep(20)
+
+          try:
+              post("failure", "Timed out; rerun when Workstation is online")
+          except (RuntimeError, subprocess.TimeoutExpired, ValueError):
+              pass
+          summarize(
+              "No completed Workstation result arrived within 40 minutes. "
+              "The machine may be offline, queued, or still building. "
+              "This is not a test pass. Rerun this workflow when the Workstation is available."
+          )
+          sys.exit(1)
+          PY

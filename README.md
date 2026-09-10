@@ -8,6 +8,7 @@
 # sl2cfoam++
 
 [![Regression](https://github.com/JMartinon/sl2cfoamxx/actions/workflows/regression.yml/badge.svg?branch=main&event=push)](https://github.com/JMartinon/sl2cfoamxx/actions/workflows/regression.yml)
+[![GPU regression](https://github.com/JMartinon/sl2cfoamxx/actions/workflows/gpu-regression.yml/badge.svg?branch=main&event=push)](https://github.com/JMartinon/sl2cfoamxx/actions/workflows/gpu-regression.yml)
 [![Documentation](https://img.shields.io/badge/docs-theory_and_algorithms-blue)](https://jmartinon.github.io/sl2cfoamxx/)
 [![License: GPL v3 or later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 

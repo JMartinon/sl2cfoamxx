@@ -42,11 +42,12 @@ shows a temporary download failure or unavailable runner, use **Re-run failed
 jobs** once the infrastructure recovers. Repeating a reproducible failure until
 it happens to turn green does not resolve it.
 
-The README's regression badge reports the public repository's latest `main`
-CPU checks. GPU and licensed Mathematica validation are performed separately
-in the private development environment. They are not run by this public
-repository's hosted CPU workflow. The same GPU and Mathematica tests can be
-run locally as described below.
+The README's **Regression** badge reports the latest `main` CPU checks. The
+separate **GPU regression** badge reports the V100 Workstation checks for
+public `main` commits, including licensed Mathematica validation. Open
+**Actions → GPU regression** or the commit's **GPU / Workstation** status to
+see the outcome and the exact revision tested. A GPU pass requires all nine
+CPU, GPU, and Mathematica workflows to complete without skipped tests.
 
 ## Automatic checks on GitHub
 
@@ -68,6 +69,34 @@ their language-facing tensor, numerical, lifetime, and progress behavior.
 The hosted jobs run CPU-labelled tests only: a CPU pass does not establish
 CUDA correctness. Release and Debug use separate build directories. Failed
 jobs retain build and CTest logs for 14 days.
+
+### Workstation GPU automation
+
+The [GPU regression workflow](../.github/workflows/gpu-regression.yml) starts
+after every push to this repository's `main` branch. It can also be started
+from **Actions → GPU regression → Run workflow**, with `main` selected. A
+GitHub-hosted job requests a run for that exact commit and waits for the
+NVIDIA V100 Workstation to report its result. Each request has its own run
+identifier and attempt number; a result from an earlier commit or rerun cannot
+satisfy a new request.
+
+The Workstation discovers requests within approximately one minute, then
+waits for its execution queue and builds the requested revision. It enables
+CUDA and all four language APIs and runs all nine CPU, GPU, and Mathematica
+workflows. Missing or skipped tests fail the check. This validates the V100
+backend; separate hardware validation is still needed for Ampere kernels and
+multi-GPU behavior.
+
+If the Workstation is offline, the status remains pending. The hosted job
+waits up to 40 minutes, then fails with a timeout rather than reporting a test
+pass. The same limit includes time spent queued or building. Bring the
+Workstation online and use **Re-run failed jobs** to issue a new request.
+
+Pull requests, including those from forks, run the hosted CPU checks. They do
+not submit code to the Workstation: GPU requests are limited to this
+repository's `main` branch, and the public workflow does not check out code or
+run on a self-hosted machine. The Workstation runs accepted revisions through
+a separately managed execution service.
 
 With Actions enabled, the workflow files handle future runs automatically.
 You can additionally make the three hosted job checks **required** in GitHub's
