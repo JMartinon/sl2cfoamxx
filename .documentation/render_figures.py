@@ -31,13 +31,15 @@ FIGURES = {
 
 # Preserve the TikZ geometry while making its ink respond to the embedding
 # page's color-scheme. The SVG canvas remains transparent in either theme.
+# Tensor fills keep their original pastels; their TikZ labels use a fixed dark
+# color so label contrast does not depend on the page background.
 PALETTE = {
     "ink": ("rgb(0%, 0%, 0%)", "#d5dee8"),
     "inverse": ("rgb(100%, 100%, 100%)", "#20232d"),
     "red": ("rgb(79.998779%, 0%, 0%)", "#ff9696"),
     "blue": ("rgb(25%, 25%, 100%)", "#a2b7ff"),
-    "sixj": ("rgb(84.999084%, 100%, 84.999084%)", "#274b3e"),
-    "booster": ("rgb(84.999084%, 84.999084%, 100%)", "#303e68"),
+    "sixj": ("rgb(84.999084%, 100%, 84.999084%)", "rgb(84.999084%, 100%, 84.999084%)"),
+    "booster": ("rgb(84.999084%, 84.999084%, 100%)", "rgb(84.999084%, 84.999084%, 100%)"),
 }
 
 

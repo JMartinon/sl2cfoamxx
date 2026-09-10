@@ -15,7 +15,10 @@ root with `python3 .documentation/render_figures.py`. This requires `pdflatex`
 (including TikZ, PGFPlots, and the standalone class) and `pdf2svg`. The script
 uses a temporary build directory, disables TeX shell escape, outlines the
 mathematical glyphs, and adds accessible descriptions. The SVG canvas is
-transparent; an embedded light/dark palette keeps the lines and labels legible.
+transparent; an embedded light/dark palette keeps the network lines and external
+labels legible. Tensor nodes retain their opaque pastel green/blue fills in both
+themes, with fixed dark labels inside them. TikZ color mixtures such as
+`green!15` mix with white; they do not make the fill transparent.
 The website sets `color-scheme` from the selected theme, which also controls
 the SVG's `prefers-color-scheme` media query. This applies to the hand-authored
 `numerical-organization.svg` overview as well. Print uses the light palette.
