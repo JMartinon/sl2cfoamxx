@@ -34,7 +34,7 @@ FIGURES = {
 # Tensor fills keep their original pastels; their TikZ labels use a fixed dark
 # color so label contrast does not depend on the page background.
 PALETTE = {
-    "ink": ("rgb(0%, 0%, 0%)", "#d5dee8"),
+    "ink": ("rgb(0%, 0%, 0%)", "#ffffff"),
     "inverse": ("rgb(100%, 100%, 100%)", "#20232d"),
     "red": ("rgb(79.998779%, 0%, 0%)", "#ff9696"),
     "blue": ("rgb(25%, 25%, 100%)", "#a2b7ff"),

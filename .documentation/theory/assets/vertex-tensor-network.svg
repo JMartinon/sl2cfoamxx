@@ -6,7 +6,7 @@
 <desc id="figure-description">Five green weighted 6j tensors S_A through S_E and four blue booster tensors B^(2) through B^(5) are connected by labeled index junctions. The five boundary intertwiners remain open; all other indices are summed. Crossings without a labeled junction do not connect.</desc>
 <style>
 :root { --figure-ink: rgb(0%, 0%, 0%); --figure-inverse: rgb(100%, 100%, 100%); --figure-red: rgb(79.998779%, 0%, 0%); --figure-blue: rgb(25%, 25%, 100%); --figure-sixj: rgb(84.999084%, 100%, 84.999084%); --figure-booster: rgb(84.999084%, 84.999084%, 100%); }
-@media (prefers-color-scheme: dark) { :root { --figure-ink: #d5dee8; --figure-inverse: #20232d; --figure-red: #ff9696; --figure-blue: #a2b7ff; --figure-sixj: rgb(84.999084%, 100%, 84.999084%); --figure-booster: rgb(84.999084%, 84.999084%, 100%); } }
+@media (prefers-color-scheme: dark) { :root { --figure-ink: #ffffff; --figure-inverse: #20232d; --figure-red: #ff9696; --figure-blue: #a2b7ff; --figure-sixj: rgb(84.999084%, 100%, 84.999084%); --figure-booster: rgb(84.999084%, 84.999084%, 100%); } }
 @media print { :root { --figure-ink: rgb(0%, 0%, 0%); --figure-inverse: rgb(100%, 100%, 100%); --figure-red: rgb(79.998779%, 0%, 0%); --figure-blue: rgb(25%, 25%, 100%); --figure-sixj: rgb(84.999084%, 100%, 84.999084%); --figure-booster: rgb(84.999084%, 84.999084%, 100%); } }
 </style>
 <defs>
