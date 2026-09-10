@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: 2026 Jeremy Martinon
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+site_name: sl2cfoam++
+site_description: Mathematical foundations and internal numerical algorithms of sl2cfoam++
+site_url: https://jmartinon.github.io/sl2cfoamxx/
+repo_url: https://github.com/JMartinon/sl2cfoamxx
+repo_name: JMartinon/sl2cfoamxx
+edit_uri: edit/main/.documentation/theory/
+docs_dir: theory
+site_dir: site
+strict: true
+theme:
+  name: material
+  font: false
+  icon:
+    logo: material/graph-outline
+  palette:
+    - media: "(prefers-color-scheme)"
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.highlight
+    - search.suggest
+plugins:
+  - search
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+extra_css:
+  - stylesheets/extra.css
+nav:
+  - Overview: index.md
+  - Theory and conventions: theory.md
+  - Wigner symbols and supports: wigner-symbols.md
+  - Boosters and quadrature: boosters.md
+  - Coherent states: coherent-states.md
+  - Contraction algorithms: contractions.md
+  - Execution and memory: execution.md
+  - References: references.md

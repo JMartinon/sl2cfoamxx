@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 Jeremy Martinon -->
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 668" role="img" aria-labelledby="title description">
+  <title id="title">Numerical organization of the Lorentzian EPRL vertex</title>
+  <desc id="description">Boundary data determine admissibility supports. The supports feed Wigner recurrences and booster recurrences with quadrature. Their weighted 6j blocks and real or coherent boosters feed sliced tensor contractions, producing a fixed component, full tensor, or coherent amplitude. Arrows represent dependencies rather than mandatory execution order.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--line)"/>
+    </marker>
+    <style>
+      :root { --ink: #243b53; --detail: #526777; --border: #c8d5df; --shared: #edf3f7; --shared-border: #b9cbd8; --numerical: #eef6f5; --numerical-border: #a9cfca; --line: #708697; }
+      @media (prefers-color-scheme: dark) {
+        :root { --ink: #d5dee8; --detail: #b4c3d1; --border: #5e7284; --shared: #283545; --shared-border: #637b90; --numerical: #263d3e; --numerical-border: #658f89; --line: #9aaebf; }
+      }
+      @media print {
+        :root { --ink: #243b53; --detail: #526777; --border: #c8d5df; --shared: #edf3f7; --shared-border: #b9cbd8; --numerical: #eef6f5; --numerical-border: #a9cfca; --line: #708697; }
+      }
+      text { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: var(--ink); text-anchor: middle; }
+      .label { font-size: 18px; font-weight: 600; }
+      .detail { font-size: 16px; fill: var(--detail); }
+      .node { fill: none; stroke: var(--border); stroke-width: 1.5; }
+      .shared { fill: var(--shared); stroke: var(--shared-border); stroke-width: 1.5; }
+      .numerical { fill: var(--numerical); stroke: var(--numerical-border); stroke-width: 1.5; }
+      .line { fill: none; stroke: var(--line); stroke-width: 1.7; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect class="shared" x="106" y="24" width="348" height="66" rx="8"/>
+  <text class="label" x="280" y="51">Boundary data and cutoff</text>
+  <text class="detail" x="280" y="75">spins, γ, Δℓ, boundary state</text>
+  <path class="line" d="M 280 90 V 122"/>
+
+  <rect class="shared" x="106" y="128" width="348" height="62" rx="8"/>
+  <text class="label" x="280" y="154">Admissibility supports</text>
+  <text class="detail" x="280" y="176">triangle inequalities and parity</text>
+  <path class="line" d="M 280 190 V 212 H 144 V 236"/>
+  <path class="line" d="M 280 212 H 416 V 236"/>
+
+  <rect class="node" x="24" y="242" width="240" height="72" rx="8"/>
+  <text class="label" x="144" y="271">Wigner recurrences</text>
+  <text class="detail" x="144" y="296">normalized 6j sequences</text>
+  <rect class="node" x="296" y="242" width="240" height="72" rx="8"/>
+  <text class="label" x="416" y="271">Booster recurrences</text>
+  <text class="detail" x="416" y="296">seeds and quadrature</text>
+  <path class="line" d="M 144 314 V 344"/>
+  <path class="line" d="M 416 314 V 344"/>
+
+  <rect class="numerical" x="24" y="350" width="240" height="68" rx="8"/>
+  <text class="label" x="144" y="378">Weighted 6j blocks</text>
+  <text class="detail" x="144" y="401">supported tensor operands</text>
+  <rect class="numerical" x="296" y="350" width="240" height="68" rx="8"/>
+  <text class="label" x="416" y="378">Booster tensors</text>
+  <text class="detail" x="416" y="401">real or coherent</text>
+  <path class="line" d="M 144 418 V 442 H 280 V 466"/>
+  <path d="M 416 418 V 442 H 280" fill="none" stroke="var(--line)" stroke-width="1.7"/>
+
+  <rect class="shared" x="106" y="472" width="348" height="64" rx="8"/>
+  <text class="label" x="280" y="499">Sliced tensor contractions</text>
+  <text class="detail" x="280" y="522">CPU or GPU</text>
+  <path class="line" d="M 280 536 V 558 H 102 V 580"/>
+  <path class="line" d="M 280 558 V 580"/>
+  <path class="line" d="M 280 558 H 458 V 580"/>
+
+  <rect class="node" x="24" y="586" width="156" height="58" rx="8"/>
+  <text class="label" x="102" y="611">Fixed</text>
+  <text class="detail" x="102" y="633">component</text>
+  <rect class="node" x="202" y="586" width="156" height="58" rx="8"/>
+  <text class="label" x="280" y="611">Full</text>
+  <text class="detail" x="280" y="633">tensor</text>
+  <rect class="node" x="380" y="586" width="156" height="58" rx="8"/>
+  <text class="label" x="458" y="611">Coherent</text>
+  <text class="detail" x="458" y="633">amplitude</text>
+</svg>

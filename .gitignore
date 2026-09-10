@@ -1,0 +1,60 @@
+# macOS metadata
+.DS_Store
+
+# CMake and compiler outputs
+/build/
+/build-*/
+/cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+DartConfiguration.tcl
+Testing/
+cmake_install.cmake
+compile_commands.json
+Makefile
+*.a
+*.d
+*.dylib
+*.o
+*.so
+*.so.*
+
+# CMake downloads the optional Python binding dependency here.
+/third-party/nanobind/
+/third-party/downloads/
+__pycache__/
+*.py[cod]
+.venv/
+/.venv-docs/
+/site/
+/.documentation/site/
+
+# Runtime tensor data, locks, and scratch files
+/data/
+/data_sl2cfoamxx/
+/test_data/
+/.cache/
+*.sl2cxx
+.locks/
+.scratch/
+
+# Cluster and validation output
+/logs/
+*.err
+*.out
+
+# LaTeX intermediates (the rendered PDF remains a maintained artifact)
+/docs/*.aux
+/docs/*.fls
+/docs/*.fdb_latexmk
+/docs/*.log
+/docs/*.synctex.gz
+
+# Editable documentation figures; rendered SVGs are maintained in Git.
+/.documentation/figures/*.aux
+/.documentation/figures/*.fls
+/.documentation/figures/*.fdb_latexmk
+/.documentation/figures/*.log
+/.documentation/figures/*.synctex.gz
+/.documentation/figures/*.pdf

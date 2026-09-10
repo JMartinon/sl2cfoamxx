@@ -1,0 +1,152 @@
+# SPDX-FileCopyrightText: 2026 Jeremy Martinon
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Regression
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: regression-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  metadata:
+    name: Metadata and documentation links
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - run: python .github/check_repository.py
+      - run: python -m pip install cffconvert==2.0.0
+      - run: cffconvert --validate --infile CITATION.cff
+
+  cpu:
+    name: CPU (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            python: '3.10'
+          - os: macos-15
+            python: '3.13'
+    env:
+      OMP_NUM_THREADS: '2'
+      OMP_DYNAMIC: 'FALSE'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+      CMAKE_BUILD_PARALLEL_LEVEL: '2'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.10'
+      - name: Linux compiler and BLAS
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-13 libopenblas-dev ninja-build
+          echo 'CXX=g++-13' >> "$GITHUB_ENV"
+          echo 'BLA_VENDOR=OpenBLAS' >> "$GITHUB_ENV"
+      - name: macOS GNU compiler
+        if: runner.os == 'macOS'
+        run: |
+          brew install gcc ninja
+          echo 'BLA_VENDOR=Apple' >> "$GITHUB_ENV"
+      - name: Python array support
+        run: python -m pip install 'numpy>=1.23,<3'
+      - name: Configure public workflows
+        run: |
+          compiler_args=()
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            compiler_args+=("-DCMAKE_CXX_COMPILER=$CXX")
+          fi
+          env -u CXX cmake -S . -B build-ci -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release "${compiler_args[@]}" \
+            -DBLA_VENDOR="$BLA_VENDOR" -DENABLE_CUDA=OFF \
+            -DBUILD_TESTING=ON -DSL2CFOAMXX_BUILD_PYTHON=ON \
+            -DSL2CFOAMXX_BUILD_JULIA=ON -DPython_EXECUTABLE="$(command -v python)" \
+            -DJulia_EXECUTABLE="$(command -v julia)" 2>&1 | tee configure-ci.log
+      - name: Build public workflows
+        run: cmake --build build-ci 2>&1 | tee build-ci.log
+      - name: Run CPU public workflows
+        run: |
+          ctest --test-dir build-ci -L cpu --output-on-failure --no-tests=error \
+            --output-junit "$GITHUB_WORKSPACE/cpu-results.xml"
+      - name: Build and install production package with tests disabled
+        run: |
+          compiler_args=()
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            compiler_args+=("-DCMAKE_CXX_COMPILER=$CXX")
+          fi
+          env -u CXX cmake -S . -B build-install-ci -G Ninja \
+            "${compiler_args[@]}" \
+            -DBLA_VENDOR="$BLA_VENDOR" -DENABLE_CUDA=OFF -DBUILD_TESTING=OFF \
+            -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/sl2cfoamxx-install" \
+            2>&1 | tee configure-install-ci.log
+          cmake --build build-install-ci 2>&1 | tee build-install-ci.log
+          cmake --install build-install-ci
+      - name: Compile and run examples as an independent installed consumer
+        run: |
+          compiler="$(sed -n 's/^CMAKE_CXX_COMPILER:[^=]*=//p' build-install-ci/CMakeCache.txt)"
+          test -n "$compiler"
+          cmake -S .github/consumer -B build-consumer-ci -G Ninja \
+            -DCMAKE_CXX_COMPILER="$compiler" \
+            -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/sl2cfoamxx-install" \
+            2>&1 | tee configure-consumer-ci.log
+          cmake --build build-consumer-ci 2>&1 | tee build-consumer-ci.log
+          ctest --test-dir build-consumer-ci --output-on-failure --no-tests=error
+      - name: Linux Debug build and assertions
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S . -B build-debug-ci -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER="$CXX" \
+            -DBLA_VENDOR="$BLA_VENDOR" -DENABLE_CUDA=OFF -DBUILD_TESTING=ON \
+            2>&1 | tee configure-debug-ci.log
+          cmake --build build-debug-ci 2>&1 | tee build-debug-ci.log
+          ctest --test-dir build-debug-ci -L cpu --output-on-failure --no-tests=error \
+            --output-junit "$GITHUB_WORKSPACE/debug-results.xml"
+      - name: Retain failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cpu-failure-${{ matrix.os }}
+          retention-days: 14
+          if-no-files-found: ignore
+          path: |
+            *-ci.log
+            cpu-results.xml
+            debug-results.xml
+            build-ci/Testing/Temporary/*.log
+            build-ci/CMakeFiles/CMakeConfigureLog.yaml
+            build-install-ci/CMakeFiles/CMakeConfigureLog.yaml
+            build-consumer-ci/Testing/Temporary/*.log
+            build-consumer-ci/CMakeFiles/CMakeConfigureLog.yaml
+            build-debug-ci/Testing/Temporary/*.log
+            build-debug-ci/CMakeFiles/CMakeConfigureLog.yaml

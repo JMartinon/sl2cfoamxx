@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: >
+  The scientific article accompanying sl2cfoam++ is forthcoming.
+  Its citation will be added as preferred-citation when publication
+  details are available. Until then, please cite the software using
+  the metadata below.
+type: software
+title: "sl2cfoam++"
+authors:
+  - family-names: "Martinon"
+    given-names: "Jeremy"
+    orcid: "https://orcid.org/0009-0005-9908-9344"
+
+version: "1.0.0"
+date-released: 2026-09-10
+
+repository-code: "https://github.com/JMartinon/sl2cfoamxx"
+
+license: GPL-3.0-or-later
+
+# Forthcoming scientific article: replace every placeholder and uncomment
+# this block when the publication or preprint details are confirmed.
+# Use the article's full author list; it may differ from the software authors.
+# Omit fields that do not apply, and use a numeric publication year.
+# preferred-citation:
+#   type: article
+#   title: "[Article title]"
+#   authors:
+#     - family-names: "[Family name]"
+#       given-names: "[Given names]"
+#   journal: "[Journal or preprint archive]"
+#   year: YYYY
+#   doi: "[Article DOI, without the https://doi.org/ prefix]"
+#   url: "[Publication or preprint URL]"
+
+keywords:
+  - spin foams
+  - loop quantum gravity
+  - EPRL model
+  - Lorentz group
+  - numerical physics
+  - high-performance computing
