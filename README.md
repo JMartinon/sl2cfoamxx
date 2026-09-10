@@ -147,7 +147,7 @@ This placeholder is not a bibliographic record.
     title         = {sl2cfoam++: A new library for the computation of the EPRL spin-foam vertex amplitude.},
     year          = {2026},
     journal       = {TBD},
-    eprint.       = {TBD},
+    eprint        = {TBD},
     archivePrefix = {arXiv},
     url = {https://github.com/JMartinon/sl2cfoamxx}
 }

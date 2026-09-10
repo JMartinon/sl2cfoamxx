@@ -84,11 +84,12 @@ def document_paths(root: Path) -> list[Path]:
 
 
 def check_versions(root: Path) -> str:
+    # The README may cite the forthcoming article rather than the software.
+    # Release versions belong to build, package, and software citation metadata.
     patterns = {
         "CMakeLists.txt": r"project\(sl2cfoamxx\s+VERSION\s+(\d+\.\d+\.\d+)",
         "julia/SL2CfoamXX/Project.toml": r'^version\s*=\s*"(\d+\.\d+\.\d+)"',
         "CITATION.cff": r'^version:\s*["\']?(\d+\.\d+\.\d+)',
-        "README.md": r"version\s*=\s*\{(\d+\.\d+\.\d+)\}",
     }
     versions = {}
     for name, pattern in patterns.items():
