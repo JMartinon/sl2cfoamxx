@@ -13,11 +13,10 @@
 [![License: GPL v3 or later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
 **sl2cfoam++ computes Lorentzian EPRL spin-foam vertex amplitudes for a
-4-simplex, on CPUs and NVIDIA GPUs.** Developed as a C++ successor to
-[sl2cfoam-next](https://github.com/qg-cpt-marseille/sl2cfoam-next), it evaluates
-the Engle–Pereira–Rovelli–Livine model in an SU(2) intertwiner basis or with
-Livine–Speziale coherent boundary states. Compute individual amplitudes or
-full vertex tensors from C++, Python, Julia, or Mathematica.
+4-simplex, on CPUs and NVIDIA GPUs.** 
+Developed as a C++ successor to [sl2cfoam-next](https://github.com/qg-cpt-marseille/sl2cfoam-next), it achieves **speedups of several orders of magnitude** on the benchmarked workloads. 
+The library evaluates the Engle–Pereira–Rovelli–Livine model in an SU(2) intertwiner basis or with Livine–Speziale coherent boundary states. 
+Compute individual amplitudes or full vertex tensors from C++, Python, Julia, or Mathematica.
 
 [Installation](#installation) · [API guides](#choose-your-api) ·
 [Configuration](docs/configuration.md) · [Scientific conventions](docs/scientific-conventions.md)
