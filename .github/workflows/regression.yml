@@ -22,6 +22,21 @@ defaults:
     shell: bash
 
 jobs:
+  scope:
+    name: Select numerical checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      cpu: ${{ steps.scope.outputs.cpu }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Determine affected backends
+        id: scope
+        run: python3 .github/ci_scope.py
+
   metadata:
     name: Metadata and documentation links
     runs-on: ubuntu-24.04
@@ -33,11 +48,14 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
+      - run: python -m unittest discover -s .github -p 'test_*.py'
       - run: python .github/check_repository.py
       - run: python -m pip install cffconvert==2.0.0
       - run: cffconvert --validate --infile CITATION.cff
 
   cpu:
+    needs: scope
+    if: needs.scope.outputs.cpu == 'true'
     name: CPU (${{ matrix.os }}, Python ${{ matrix.python }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
