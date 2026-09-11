@@ -13,10 +13,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: regression-${{ github.ref }}
-  cancel-in-progress: true
-
 defaults:
   run:
     shell: bash
@@ -54,6 +50,10 @@ jobs:
       - run: cffconvert --validate --infile CITATION.cff
 
   cpu:
+    # Documentation-only runs skip this job and leave active CPU checks alone.
+    concurrency:
+      group: regression-${{ github.ref }}-${{ matrix.os }}
+      cancel-in-progress: true
     needs: scope
     if: needs.scope.outputs.cpu == 'true'
     name: CPU (${{ matrix.os }}, Python ${{ matrix.python }})
