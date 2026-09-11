@@ -18,8 +18,8 @@ Its five axes label boundary intertwiners. The library evaluates a selected comp
 The mathematical input consists of ten boundary spins, the Barbero–Immirzi parameter, a shell cutoff, and either boundary intertwiners or coherent-state normals. Three numerical tasks then build the amplitude:
 
 1. **[Wigner symbols and supports](wigner-symbols.md).** Triangle inequalities and parity identify admissible channels. Normalized recurrences evaluate the required 6j sequences, which are packed into supported blocks.
-2. **Booster tensors.** Minimal reduced-coefficient seeds and Lorentz-group recurrences generate the spectral integrand. Fixed quadrature fills four booster tensors on the compatible supports.
-3. **Contraction.** Slicing and blocking the network produce a fixed component, the complete tensor, or a coherent amplitude. Each output has its own contraction organization.
+2. **[Booster tensors](boosters.md).** Minimal reduced-coefficient seeds and Lorentz-group recurrences generate the spectral integrand. Fixed quadrature fills four booster tensors on the compatible supports.
+3. **[Contraction](contractions.md).** Slicing and blocking the network produce a fixed component, the complete tensor, or a coherent amplitude. Each output has its own contraction organization.
 
 ![Dependency diagram: boundary data determine admissibility supports; Wigner recurrences and booster recurrences with quadrature supply supported tensors to sliced contractions, yielding a fixed component, full tensor, or coherent amplitude.](assets/numerical-organization.svg){ #numerical-organization-figure .overview-figure }
 
