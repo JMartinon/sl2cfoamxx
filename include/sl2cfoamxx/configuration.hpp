@@ -113,7 +113,8 @@ struct CoherentAmplitudeOptions {
     // Verify sum_{b!=a} j_ab*n_ab at all five boundary tetrahedra before the
     // computation. A failed check emits a warning and computation continues;
     // it is not a substitute for the public check_closure() report when an
-    // application needs to make a control-flow decision.
+    // application needs to make a control-flow decision. Applies only to
+    // angle-based calls; supplied coefficient vectors have no closure geometry.
     bool check_closure = false;
 
     // Discard C1 coefficients whose magnitude is below this fraction of the

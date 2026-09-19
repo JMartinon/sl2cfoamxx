@@ -46,6 +46,7 @@ recoupling bases, closure checks, and error handling.
 | --- | --- | --- |
 | `compute_amplitude(spins, intertwiners, Dl, gamma)` | One real fixed-intertwiner amplitude | CPU |
 | `compute_coherent_amplitude(spins, Dl, gamma, angles)` | One complex coherent amplitude | CPU/GPU |
+| `compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5)` | Amplitude from supplied coefficient vectors | CPU/GPU |
 | `compute_full_tensor(spins, Dl, gamma)` | Rank-five `FullTensor` | CPU/GPU |
 | `compute_coherent_coefficients(spins, angles)` | Coefficients for one tetrahedron | CPU |
 | `check_closure(spins, angles)` | Five closure reports | CPU |
@@ -55,3 +56,27 @@ no silent GPU-to-CPU fallback. `backend_available()`, `build_info()`, and
 `cuda_device_info()` expose the loaded library and available hardware.
 Mathematica uses capitalized names such as `ComputeFullTensor`,
 `BackendAvailableQ`, `BuildInfo`, and `CUDADeviceInfo`.
+
+## Supplied boundary coefficients
+
+The coefficient overload accepts five finite complex vectors, one for each
+canonical tensor axis. For the ordered doubled spins `(a,b,c,d)` in a row
+below, entries follow `I_min, I_min+2, ..., I_max`, where
+`I_min=max(abs(a-b),abs(c-d))` and `I_max=min(a+b,c+d)`.
+Each vector must contain exactly `(I_max-I_min)/2+1` entries for an admissible
+tetrahedron. Supply zero entries for unwanted components.
+
+| Vector / axis | Ordered spins for the recoupling basis | Ordered normals when generating coefficients |
+| --- | --- | --- |
+| `C1` / `i1` | `(j12,j13,j14,j15)` | `(n12,n13,n14,n15)` |
+| `C2` / `i2` | `(j23,j24,j25,j12)` | `(n23,n24,n25,n21)` |
+| `C3` / `i3` | `(j34,j35,j13,j23)` | `(n34,n35,n31,n32)` |
+| `C4` / `i4` | `(j45,j14,j24,j34)` | `(n45,n41,n42,n43)` |
+| `C5` / `i5` | `(j15,j25,j35,j45)` | `(n51,n52,n53,n54)` |
+
+The result is the sum of `A(i1,i2,i3,i4,i5) * C1[i1] * C2[i2] * C3[i3] *
+C4[i4] * C5[i5]` over all five axes. Values are neither conjugated nor
+normalized and need not come from coherent-state angles. Geometric closure
+checking is skipped for this overload. The configured C1 pruning ratio still
+applies; set `pruning_ratio=0` for the complete contraction. The language
+examples generate all five vectors in these bases and compare the two overloads.

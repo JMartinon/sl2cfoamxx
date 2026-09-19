@@ -149,6 +149,51 @@ compute_coherent_amplitude(
     Backend backend,
     ProgressCallback progress_callback);
 
+// Contract caller-supplied coefficients in the canonical bases for nodes
+// 1--5: (j12,j13)|(j14,j15), (j23,j24)|(j25,j12),
+// (j34,j35)|(j13,j23), (j45,j14)|(j24,j34), (j15,j25)|(j35,j45).
+// Each vector contains every admissible intertwiner in ascending doubled
+// label order and must have exactly the corresponding full-tensor extent.
+// Entries must be finite; no conjugation or normalization is applied. Zero
+// vectors are valid. C1 pruning still follows the configured pruning_ratio.
+// Closure checking is skipped because no boundary normals are supplied.
+// Backend selection and per-call callbacks follow the angle overloads above.
+[[nodiscard]] SL2CFOAMXX_API std::complex<double>
+compute_coherent_amplitude(
+    const DSpins& spins,
+    std::size_t Dl,
+    double gamma,
+    const CoherentCoefficients& C1,
+    const CoherentCoefficients& C2,
+    const CoherentCoefficients& C3,
+    const CoherentCoefficients& C4,
+    const CoherentCoefficients& C5);
+
+[[nodiscard]] SL2CFOAMXX_API std::complex<double>
+compute_coherent_amplitude(
+    const DSpins& spins,
+    std::size_t Dl,
+    double gamma,
+    const CoherentCoefficients& C1,
+    const CoherentCoefficients& C2,
+    const CoherentCoefficients& C3,
+    const CoherentCoefficients& C4,
+    const CoherentCoefficients& C5,
+    Backend backend);
+
+[[nodiscard]] SL2CFOAMXX_API std::complex<double>
+compute_coherent_amplitude(
+    const DSpins& spins,
+    std::size_t Dl,
+    double gamma,
+    const CoherentCoefficients& C1,
+    const CoherentCoefficients& C2,
+    const CoherentCoefficients& C3,
+    const CoherentCoefficients& C4,
+    const CoherentCoefficients& C5,
+    Backend backend,
+    ProgressCallback progress_callback);
+
 // Compute the complete tensor with canonical (i1,i2,i3,i4,i5) indexed access.
 // Omitting the backend selects LibraryConfig::backend. The explicit overload
 // always honors the caller's selection and never silently falls back. Both

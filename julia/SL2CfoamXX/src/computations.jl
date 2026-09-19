@@ -153,6 +153,41 @@ end
 compute_coherent_amplitude(spins, Dl, gamma, angles, backend; progress=nothing) =
     compute_coherent_amplitude(spins, Dl, gamma, angles; backend=backend, progress=progress)
 
+"""
+    compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5;
+                               backend=nothing, progress=nothing)
+
+Contract the vertex with five coefficient vectors in each node's ascending
+admissible intertwiner order. Their lengths must match the five tensor axes
+and all components must be finite. Values are used without conjugation or
+normalization. No closure check is performed because no normals are supplied.
+"""
+function compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5;
+                                    backend=nothing, progress=nothing)
+    labels = _labels(spins, 10, "spins")
+    cutoff = _nonnegative_int(Dl, UInt64, "Dl")
+    parameter = _real(gamma, "gamma")
+    c1, c2, c3, c4, c5 = map(_coefficients, (C1, C2, C3, C4, C5),
+                            ("C1", "C2", "C3", "C4", "C5"))
+    selected_backend = _backend_argument(backend, progress)
+    result = Ref{ComplexF64}(0.0)
+    function_pointer = _sym(:sjx_compute_coherent_amplitude_coefficients)
+    _check_error(_run_native(progress) do queue
+        Base.@threadcall(function_pointer, Ptr{Cvoid},
+            (Ptr{Int32}, UInt64, Float64,
+             Ptr{ComplexF64}, UInt64, Ptr{ComplexF64}, UInt64, Ptr{ComplexF64}, UInt64,
+             Ptr{ComplexF64}, UInt64, Ptr{ComplexF64}, UInt64,
+             Ptr{Int32}, Ptr{Cvoid}, Ptr{ComplexF64}),
+            labels, cutoff, parameter,
+            c1, UInt64(length(c1)), c2, UInt64(length(c2)), c3, UInt64(length(c3)),
+            c4, UInt64(length(c4)), c5, UInt64(length(c5)), selected_backend, queue, result)
+    end)
+    return result[]
+end
+compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5, backend; progress=nothing) =
+    compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5;
+                               backend=backend, progress=progress)
+
 function compute_full_tensor(spins, Dl, gamma; backend=nothing, progress=nothing)
     labels = _labels(spins, 10, "spins")
     cutoff = _nonnegative_int(Dl, UInt64, "Dl")

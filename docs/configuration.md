@@ -111,7 +111,7 @@ and a new general `FullTensor(shape)` is zero-filled.
 
 | Field | Default | Meaning |
 | --- | --- | --- |
-| `check_closure` | `false` | Check all five nodes before computation; a failure warns and continues, even with silent verbosity. |
+| `check_closure` | `false` | For angle-based calls, check all five nodes before computation; a failure warns and continues, even with silent verbosity. Skipped for supplied coefficient vectors. |
 | `pruning_ratio` | `1e-8` | Skip C1 lanes below this fraction of the largest coefficient magnitude; `0` disables relative pruning. Must be finite and in `[0,1]`. |
 
 Pruning does not change `compute_coherent_coefficients()`, prune C2–C5, or

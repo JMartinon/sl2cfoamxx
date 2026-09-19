@@ -12,7 +12,8 @@ const _symbol_names = (
     :sjx_backend_available, :sjx_cuda_device_count, :sjx_cuda_device_info,
     :sjx_device_info_dispose, :sjx_progress_create, :sjx_progress_poll,
     :sjx_progress_free, :sjx_indices_from_intertwiners, :sjx_compute_amplitude,
-    :sjx_compute_coherent_amplitude, :sjx_compute_full_tensor,
+    :sjx_compute_coherent_amplitude, :sjx_compute_coherent_amplitude_coefficients,
+    :sjx_compute_full_tensor,
     :sjx_compute_coherent_coefficients, :sjx_check_closure, :sjx_tensor_create,
     :sjx_tensor_create_mapped, :sjx_tensor_load, :sjx_tensor_map, :sjx_tensor_free,
     :sjx_tensor_info, :sjx_tensor_info_dispose, :sjx_tensor_file_info,
@@ -147,4 +148,14 @@ function _real(value, name::AbstractString)
     result = Float64(value)
     isfinite(result) || throw(ArgumentError("$name must be finite"))
     return result
+end
+
+function _coefficients(values, name::AbstractString)
+    (values isa Tuple || values isa AbstractVector) ||
+        throw(ArgumentError("$name must be a vector or tuple"))
+    all(value -> (value isa Real || value isa Complex) && !(value isa Bool), values) ||
+        throw(ArgumentError("$name must contain real or complex numbers"))
+    # Copy noncontiguous views and convert to the bridge's complex128 layout.
+    # The public C++ API checks node-specific lengths and finite components.
+    return ComplexF64[value for value in values]
 end

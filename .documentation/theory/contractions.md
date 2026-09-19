@@ -447,6 +447,13 @@ The amplitude is multilinear in the five coefficient vectors; it introduces
 no conjugation of their entries. Their construction is described in
 [Coherent boundary states](coherent-states.md).
 
+The public API accepts these five vectors directly through the
+`compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5)` overload,
+or constructs them from the boundary angles. Supplied vectors follow the
+complete ascending admissible intertwiner ranges and are used without
+normalization. Both forms share the contraction below and the configured C1
+pruning policy. Geometric closure checking requires the angle-based form.
+
 `compute_coherent_amplitude` contracts four coefficient vectors while
 producing the boosters:
 

@@ -47,9 +47,7 @@ const ANGLES = [
 const NODE_SPINS = ((1,2,3,4), (5,6,7,1), (8,9,2,5), (10,3,6,8), (4,7,9,10))
 const NODE_ROWS = ((1,2,3,4), (6,7,8,5), (11,12,9,10), (16,13,14,15), (17,18,19,20))
 
-function show_contractions(tensor, spins, coherent)
-    cs = [sf.compute_coherent_coefficients(
-        [spins[k] for k in NODE_SPINS[n]], ANGLES[collect(NODE_ROWS[n]),:]) for n in 1:5]
+function show_contractions(tensor, cs, coherent)
     # FullTensor supports Julia's AbstractArray interface directly. Array(tensor)
     # expands compressed storage once for an efficient dense contraction.
     array = Array(tensor)
@@ -121,8 +119,15 @@ function main(args)
         @assert isapprox(tensor[indices...], amplitude; rtol=5e-10)
         closure = sf.check_closure(spins,ANGLES)
         @assert closure.all_closed
-        C1 = sf.compute_coherent_coefficients(spins[1:4],ANGLES[1:4,:])
+        cs = [sf.compute_coherent_coefficients(
+            [spins[k] for k in NODE_SPINS[n]], ANGLES[collect(NODE_ROWS[n]),:]) for n in 1:5]
+        C1, C2, C3, C4, C5 = cs
         coherent = sf.compute_coherent_amplitude(spins,Dl,1.2,ANGLES; backend=backend,progress=report)
+        # Supply any finite vectors in the same intertwiner bases. Scaling C1
+        # by 2im scales the amplitude by 2im: no normalization or conjugation.
+        weighted = sf.compute_coherent_amplitude(spins,Dl,1.2,2im .* C1,C2,C3,C4,C5;
+                                                 backend=backend,progress=report)
+        @assert isapprox(weighted,2im * coherent; rtol=5e-9,atol=5e-21)
         if two_j == 1 && Dl == 2
             expected = -1.6748256353857123e-10 + 1.2973143587300214e-10im
             @assert isapprox(coherent,expected; rtol=5e-9,atol=5e-21)
@@ -145,11 +150,12 @@ function main(args)
         @assert Array(loaded) == array == Array(mapped)
         println("sl2cfoam++ ", sf.version(), "; backend: ", backend_name)
         println("Fixed amplitude: ", amplitude, "; coherent amplitude: ", coherent)
+        println("Amplitude with custom coefficients: ", weighted)
         println("Closure: ", closure.all_closed, "; C1: ", C1)
         println("Tensor shape: ",size(tensor),"; stored values: ",tensor.stored_size)
         println("Julia element type: ",eltype(tensor),"; first slice: ",size(first_slice))
         println("Progress events: ",length(events),"; mapped read-only: ",mapped.is_read_only)
-        contraction && show_contractions(tensor,spins,coherent)
+        contraction && show_contractions(tensor,cs,coherent)
     end
 end
 

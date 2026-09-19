@@ -7,9 +7,34 @@ The [Mathematica guide](mathematica.md) covers installation, first calculations,
 and ordinary tensor algebra. This reference lists complete configuration
 keys, tensor operations, and integration contracts.
 
-[Configuration](#configuration-defaults) · [Tensor functions](#tensor-functions) ·
+[Coherent inputs](#coherent-inputs) · [Configuration](#configuration-defaults) · [Tensor functions](#tensor-functions) ·
 [Build settings](#build-and-loading-settings) · [Callbacks](#callback-contract) ·
 [Errors](#error-details) · [Validation](#validation)
+
+## Coherent inputs
+
+```wl
+ComputeCoherentAmplitude[spins, Dl, gamma, angles, options]
+ComputeCoherentAmplitude[spins, Dl, gamma, C1, C2, C3, C4, C5, options]
+```
+
+Both forms return a machine complex value and accept `"Backend" -> Automatic`
+and `"ProgressFunction" -> None`. A progress callback requires an explicit
+backend. Supplied vectors are copied for native computation and must contain
+finite real or complex numeric entries; exact and arbitrary-precision entries
+are converted to machine precision. Their lengths must equal the five logical
+intertwiner dimensions. Vector position 1 represents the lowest allowed
+doubled intertwiner label; each subsequent position increases that label by 2.
+
+The vectors correspond to tensor axes `{i1,i2,i3,i4,i5}` in the
+[canonical recoupling bases](scientific-conventions.md). No conjugation,
+normalization, or additional phase is applied. With pruning disabled, the
+result equals `Fold[Dot, Normal[tensor], Reverse[{C1,C2,C3,C4,C5}]]` for the
+same spins, cutoff, gamma, and simplicity convention. The configured C1 pruning
+also applies to supplied coefficients, and it does not modify the input lists.
+`"CheckClosure"` applies only to angle-based calls because coefficient vectors
+do not provide normals. Invalid dimensions or nonfinite entries return
+`Failure["InvalidArgument", ...]`.
 
 ## Configuration defaults
 
@@ -58,7 +83,7 @@ metadata/alignment prefix.
 
 | `config["CoherentAmplitude"]` field | Default |
 | --- | --- |
-| `"CheckClosure"` | `False`. Enabling it warns about failed closure and continues computation. Use `CheckClosure` to make your own decision. |
+| `"CheckClosure"` | `False`. For angle-based coherent calls, enabling it warns about failed closure and continues computation. Supplied-coefficient calls skip closure checks. Use `CheckClosure` to make your own decision. |
 | `"PruningRatio"` | `1.*^-8`: relative C1 coefficient pruning. `0.` disables this pruning. |
 
 Pruning does not alter the vectors returned by `ComputeCoherentCoefficients`
@@ -190,7 +215,8 @@ Enable `BUILD_TESTING=ON` and, if discovery fails, set
 ctest --test-dir build-mathematica -L mathematica --output-on-failure
 ```
 
-The workflow covers independent coefficient references, fixed/coherent/tensor
+The workflow covers independent coefficient references, supplied coefficient
+vectors and their validation, nonconjugating contractions, fixed/coherent/tensor
 agreement, both simplicity conventions, asymmetric inputs, dense and compact
 storage, mappings, conversions, array ownership, errors, and callback cleanup.
 A separate lifecycle entry exercises unload/reload and normal kernel exit.

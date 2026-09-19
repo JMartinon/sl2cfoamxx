@@ -213,6 +213,9 @@ class PythonApiTest(unittest.TestCase):
                             explicit = foam.compute_coherent_amplitude(
                                 SPINS, Dl, 1.2, ANGLES, backend)
                             self.assertNumericallyEqual(explicit, expected)
+                            supplied = foam.compute_coherent_amplitude(
+                                SPINS, Dl, 1.2, *coefficients, backend=backend)
+                            self.assertNumericallyEqual(supplied, expected)
                     metadata = tensor.metadata()
                     self.assertEqual(tuple(metadata.scientific.spins), SPINS)
                     self.assertEqual(metadata.scientific.Dl, Dl)
@@ -220,6 +223,48 @@ class PythonApiTest(unittest.TestCase):
                     self.assertEqual(metadata.logical_shape, tensor.shape)
                     self.assertEqual(metadata.logical_values, tensor.logical_size)
                     self.assertEqual(metadata.stored_values, tensor.stored_size)
+
+    def test_custom_coefficient_vectors(self):
+        tensor = foam.compute_full_tensor(SPINS, 0, 1.2)
+        coefficients = [np.array([complex(0.3 + node + i, 0.2 - 0.4 * i)
+                                 for i in range(size)])
+                        for node, size in enumerate(tensor.shape)]
+        expected = np.einsum("abcde,a,b,c,d,e->", tensor, *coefficients,
+                             optimize=True)
+        self.assertNumericallyEqual(foam.compute_coherent_amplitude(
+            SPINS, 0, 1.2, *coefficients), expected)
+        # Lists, tuples, and strided NumPy vectors preserve complex values.
+        padded = np.zeros(2 * len(coefficients[2]), dtype=np.complex128)
+        padded[::2] = coefficients[2]
+        mixed = [coefficients[0].tolist(), tuple(coefficients[1]),
+                 padded[::2], coefficients[3], coefficients[4]]
+        events = []
+        self.assertNumericallyEqual(foam.compute_coherent_amplitude(
+            SPINS, 0, 1.2, *mixed, backend=foam.Backend.CPU,
+            progress=events.append), expected)
+        self.assertTrue(events)
+        coefficients[0] *= 2.0 - 3.0j
+        self.assertNumericallyEqual(foam.compute_coherent_amplitude(
+            SPINS, 0, 1.2, *coefficients), (2.0 - 3.0j) * expected)
+        coefficients[3][:] = 0
+        self.assertEqual(foam.compute_coherent_amplitude(
+            SPINS, 0, 1.2, *coefficients), 0j)
+
+    def test_coefficient_input_validation(self):
+        valid = [np.ones(2, dtype=np.complex128) for _ in range(5)]
+        for node in range(5):
+            for bad in ([], [1j], [1j] * 3, [complex(math.nan, 0), 1j],
+                        [1j, complex(0, math.inf)]):
+                coefficients = valid.copy()
+                coefficients[node] = bad
+                with self.subTest(node=node, bad=bad), self.assertRaises(ValueError):
+                    foam.compute_coherent_amplitude(SPINS, 0, 1.2, *coefficients)
+        with self.assertRaises(TypeError):
+            foam.compute_coherent_amplitude(SPINS, 0, 1.2, *valid,
+                                             progress=lambda event: None)
+        with self.assertRaises(TypeError):
+            foam.compute_coherent_amplitude(SPINS, 0, 1.2,
+                                             np.ones((2, 2)), *valid[1:])
 
     def test_numpy_sequences_and_strided_angles(self):
         spins = np.array(SPINS, dtype=np.int64)

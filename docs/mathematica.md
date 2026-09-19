@@ -99,6 +99,7 @@ Invalid input and operational errors return `Failure[...]`. Check
 | --- | --- |
 | `ComputeAmplitude[spins, intertwiners, Dl, gamma]` | Machine real, CPU only. `"CachePolicy" -> "disabled"`; use `"prefer_full_tensor"` for a best-effort persisted lookup. |
 | `ComputeCoherentAmplitude[spins, Dl, gamma, angles]` | Machine complex. `"Backend" -> Automatic`, `"ProgressFunction" -> None`. |
+| `ComputeCoherentAmplitude[spins, Dl, gamma, C1, C2, C3, C4, C5]` | Machine complex contraction of five supplied vectors. Same backend/progress options. |
 | `ComputeFullTensor[spins, Dl, gamma]` | Managed tensor. Same backend/progress options; `"ReturnType" -> "Tensor"` or `"Array"` for a copied array. |
 | `ComputeCoherentCoefficients[spins4, angles4]` | Packed complex coefficient vector for one tetrahedron. |
 | `CheckClosure[spins, angles]` | Association with `"AllClosed"` and five `"Nodes"`; absolute and relative tolerances default to `10^-12`. |
@@ -123,10 +124,38 @@ closed = closure["AllClosed"];
 amplitude = ComputeCoherentAmplitude[spins, Dl, gamma, angles];
 ```
 
+Alternatively, pass your own five coefficient vectors directly:
+
+```wl
+amplitude = ComputeCoherentAmplitude[spins, Dl, gamma, C1, C2, C3, C4, C5,
+    "Backend" -> "CPU"];
+```
+
+Each vector must be a list of finite real or complex numbers with the length
+of its corresponding canonical tensor axis `{i1,i2,i3,i4,i5}`. Entries follow
+increasing allowed intertwiner labels. Exact numeric values are converted
+to machine precision. The contraction multiplies the supplied entries as
+written, without conjugating or normalizing them; invalid lengths and
+nonfinite entries return `Failure`. It does not check closure because this
+form has no normals. Both forms accept the same backend and progress options.
+
+To reproduce the angle form, construct the vectors in the required recoupling
+bases and pass them as five arguments:
+
+```wl
+nodeSpins = {{1,2,3,4},{5,6,7,1},{8,9,2,5},{10,3,6,8},{4,7,9,10}};
+nodeRows = {{1,2,3,4},{6,7,8,5},{11,12,9,10},{16,13,14,15},{17,18,19,20}};
+coefficients = Table[ComputeCoherentCoefficients[
+    spins[[nodeSpins[[n]]]], angles[[nodeRows[[n]]]]], {n,5}];
+amplitudeFromCoefficients = ComputeCoherentAmplitude[spins, Dl, gamma,
+    Sequence @@ coefficients];
+```
+
 For a direct comparison against a complete tensor contraction, set
 `config["CoherentAmplitude"]["PruningRatio"]` to zero using the nested-update
 pattern below. The default `1.*^-8` prunes small C1 contributions and is not
-a rigorous bound on the final amplitude error.
+a rigorous bound on the final amplitude error. This setting applies to both
+the angle and supplied-coefficient forms without changing your input vectors.
 
 ## Tensor algebra
 

@@ -3,7 +3,7 @@
 
 name = "SL2CfoamXX"
 uuid = "7b7112c0-443a-4187-82ad-29ec44ef4ab0"
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"

@@ -11,6 +11,7 @@
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
+#include <nanobind/stl/vector.h>
 
 #include <exception>
 #include <memory>
@@ -314,6 +315,32 @@ void bind_computations(nb::module_& m)
     }, "spins"_a, "Dl"_a, "gamma"_a, "angles"_a, "backend"_a = nb::none(),
        nb::kw_only(), "progress"_a = nb::none(),
        "Compute a coherent amplitude from 20 (theta, phi) rows in canonical boundary order.");
+    m.def("compute_coherent_amplitude", [](const s::DSpins& spins,
+        std::size_t Dl, double gamma,
+        const s::CoherentCoefficients& C1, const s::CoherentCoefficients& C2,
+        const s::CoherentCoefficients& C3, const s::CoherentCoefficients& C4,
+        const s::CoherentCoefficients& C5,
+        std::optional<s::Backend> backend, const nb::object& progress) {
+        auto callback = progress_callback(progress);
+        const bool has_progress = !progress.is_none();
+        if (has_progress && !backend) {
+            throw nb::type_error("an explicit backend is required with progress");
+        }
+        nb::gil_scoped_release release;
+        if (!has_progress) {
+            return backend ? s::compute_coherent_amplitude(
+                                 spins, Dl, gamma, C1, C2, C3, C4, C5, *backend)
+                           : s::compute_coherent_amplitude(
+                                 spins, Dl, gamma, C1, C2, C3, C4, C5);
+        }
+        return s::compute_coherent_amplitude(
+            spins, Dl, gamma, C1, C2, C3, C4, C5, *backend, std::move(callback));
+    }, "spins"_a, "Dl"_a, "gamma"_a,
+       "C1"_a, "C2"_a, "C3"_a, "C4"_a, "C5"_a, "backend"_a = nb::none(),
+       nb::kw_only(), "progress"_a = nb::none(),
+       "Contract five finite coefficient vectors in canonical tensor-axis order, "
+       "without normalization or conjugation. Each vector covers its complete "
+       "ascending admissible doubled-intertwiner range; closure is not checked.");
     m.def("compute_full_tensor", [](const s::DSpins& spins,
         std::size_t Dl, double gamma, std::optional<s::Backend> backend,
         const nb::object& progress) {

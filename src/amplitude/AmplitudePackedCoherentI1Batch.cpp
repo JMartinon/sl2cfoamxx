@@ -2799,8 +2799,35 @@ B4CoherentCoefficientsView coherent_C1_make_pruned_view(
         }
     }
 
-    const double rel_cut = result.C1_prune_relative_tol_used * result.C1_max_abs;
-    const double abs_cut = result.C1_prune_absolute_tol_used;
+    // Finite caller-supplied components can have a magnitude greater than
+    // DBL_MAX. Compare scaled magnitudes in that case so relative pruning
+    // does not turn its cutoff into infinity and discard comparable lanes.
+    // Keep the existing arithmetic when all magnitudes are representable.
+    std::vector<double> scaled_absC;
+    double magnitude_scale = 1.0;
+    double comparison_max_abs = result.C1_max_abs;
+    if (std::isinf(result.C1_max_abs)) {
+        for (std::size_t i = 0; i < n; ++i) {
+            magnitude_scale = std::max({magnitude_scale,
+                std::abs(C1.coefficients[i].re),
+                std::abs(C1.coefficients[i].im)});
+        }
+        scaled_absC.reserve(n);
+        comparison_max_abs = 0.0;
+        for (std::size_t i = 0; i < n; ++i) {
+            const double a = std::hypot(
+                C1.coefficients[i].re / magnitude_scale,
+                C1.coefficients[i].im / magnitude_scale);
+            scaled_absC.push_back(a);
+            if (a > comparison_max_abs) {
+                comparison_max_abs = a;
+                imax = i;
+            }
+        }
+    }
+    const double rel_cut =
+        result.C1_prune_relative_tol_used * comparison_max_abs;
+    const double abs_cut = result.C1_prune_absolute_tol_used / magnitude_scale;
     const double cut = std::max(rel_cut, abs_cut);
 
     kept_iotas.reserve(n);
@@ -2808,9 +2835,10 @@ B4CoherentCoefficientsView coherent_C1_make_pruned_view(
 
     for (std::size_t i = 0; i < n; ++i) {
         const double a = absC[i];
+        const double comparison_abs = scaled_absC.empty() ? a : scaled_absC[i];
         bool keep = true;
         if (opt.skip_zero_c1 && a == 0.0) keep = false;
-        if (cut > 0.0 && a < cut) keep = false;
+        if (cut > 0.0 && comparison_abs < cut) keep = false;
 
         if (keep) {
             kept_iotas.push_back(C1.doubled_iotas[i]);

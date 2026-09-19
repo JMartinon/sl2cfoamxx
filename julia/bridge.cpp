@@ -209,6 +209,16 @@ std::array<s::NormalAngles, N> angles(const double* values)
     return result;
 }
 
+s::CoherentCoefficients coefficients(const SJXComplex* values, uint64_t count)
+{
+    const auto size = native_size(count);
+    if (size) checked(values);
+    s::CoherentCoefficients result(size);
+    for (std::size_t i = 0; i < size; ++i)
+        result[i] = {values[i].re, values[i].im};
+    return result;
+}
+
 s::FullTensor::shape_type shape(const uint64_t* values)
 {
     checked(values);
@@ -468,6 +478,31 @@ SJXError* sjx_compute_coherent_amplitude(const int32_t* boundary,
             directions, enum_value<s::Backend>(*backend, 1));
         else value = s::compute_coherent_amplitude(input, native_size(Dl), gamma,
             directions, enum_value<s::Backend>(*backend, 1), callback(queue));
+        *output = {value.real(), value.imag()};
+    });
+}
+SJXError* sjx_compute_coherent_amplitude_coefficients(const int32_t* boundary,
+    uint64_t Dl, double gamma,
+    const SJXComplex* C1, uint64_t count1, const SJXComplex* C2, uint64_t count2,
+    const SJXComplex* C3, uint64_t count3, const SJXComplex* C4, uint64_t count4,
+    const SJXComplex* C5, uint64_t count5,
+    const int32_t* backend, SJXProgressQueue* queue, SJXComplex* output) noexcept
+{
+    return protect([&] {
+        checked(output);
+        const auto input = spins<10>(boundary);
+        const auto c1 = coefficients(C1, count1), c2 = coefficients(C2, count2),
+                   c3 = coefficients(C3, count3), c4 = coefficients(C4, count4),
+                   c5 = coefficients(C5, count5);
+        if (queue && !backend)
+            throw std::invalid_argument("an explicit backend is required with progress");
+        std::complex<double> value;
+        if (!backend) value = s::compute_coherent_amplitude(input, native_size(Dl), gamma,
+            c1, c2, c3, c4, c5);
+        else if (!queue) value = s::compute_coherent_amplitude(input, native_size(Dl), gamma,
+            c1, c2, c3, c4, c5, enum_value<s::Backend>(*backend, 1));
+        else value = s::compute_coherent_amplitude(input, native_size(Dl), gamma,
+            c1, c2, c3, c4, c5, enum_value<s::Backend>(*backend, 1), callback(queue));
         *output = {value.real(), value.imag()};
     });
 }

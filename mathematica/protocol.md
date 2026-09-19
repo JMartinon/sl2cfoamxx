@@ -48,6 +48,7 @@ different native binary requires a fresh kernel.
 | 13 | coefficients | [spins4] | [angles8] | | list of complex pairs |
 | 14 | closure | [spins10] | [atol,rtol,angles40] | | {all_closed,nodes} |
 | 15 | intertwiner indices | [spins10,intertwiners5] | [] | | indices5 |
+| 16 | coherent amplitude from coefficients | [Dl,backend,spins10,lengths5] | [gamma,coefficient pairs] | | complex pair |
 | 20 | create tensor | [destination,init,layout,shape5] | [] | | metadata |
 | 21 | create mapped | [destination,init,layout,shape5] | [] | path / | metadata |
 | 22 | load | [destination] | [] | path / | metadata |
@@ -73,6 +74,14 @@ different native binary requires a fresh kernel.
 | 52 | poll job | [job] | [] | | {done:boolean,events:[event records]} |
 | 53 | finish job | [job] | [] | | coherent pair or full metadata; joins, transfers result once |
 | 54 | abandon/release job | [job] | [] | | null; disables queue, joins, discards unclaimed result/error |
+| 55 | start coherent coefficient job | [job,Dl,backend,spins10,lengths5] | [gamma,coefficient pairs] | | null |
+
+Coefficient pairs are flattened real,imag values in C1, C2, C3, C4, C5 order.
+The five lengths count complex entries, and the real array has exactly
+`1 + 2 Sum[lengths5]` elements. The bridge checks these counts before copying;
+the native API checks the finite entries and canonical intertwiner dimensions.
+Jobs own all five copied vectors. Contraction does not conjugate or normalize
+the entries, uses configured C1 pruning, and skips angle-based closure checks.
 
 Angles are interleaved theta,phi in the public native node order. Configuration
 integer order is: backend, progress_bar, simplicity_constraint, verbosity,

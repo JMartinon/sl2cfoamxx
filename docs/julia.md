@@ -42,8 +42,8 @@ JULIA_LOAD_PATH="$PWD/build-julia/julia:@stdlib" \
 ```
 
 The single [Julia example](../examples/julia_example.jl) covers configuration,
-all five computation functions, tensors, slicing, mutation, persistence,
-closure, callbacks, and optional array contractions. Defaults are `--backend
+all five computation functions, custom coefficient vectors, tensors, slicing,
+mutation, persistence, closure, callbacks, and optional array contractions. Defaults are `--backend
 CPU --two-j 1 --Dl 2 --threads 2`; `--contract` enables contractions. Add
 `--two-j 12 --Dl 6` for a longer progress display. `--help` lists options.
 
@@ -111,6 +111,7 @@ apply changes; configuring a copy does not change calls already in progress.
 | `compute_amplitude(spins, intertwiners, Dl, gamma; cache_policy=AmplitudeCachePolicy.disabled)` | `Float64`; fixed amplitudes run on CPU. |
 | `compute_full_tensor(spins, Dl, gamma; backend=nothing, progress=nothing)` | `FullTensor`; `nothing` uses the configured backend. |
 | `compute_coherent_amplitude(spins, Dl, gamma, angles; backend=nothing, progress=nothing)` | `ComplexF64`; CPU or GPU. |
+| `compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5; backend=nothing, progress=nothing)` | `ComplexF64`; contract user-supplied coefficients on CPU or GPU. |
 | `compute_coherent_coefficients(spins4, angles4)` | Independent `Vector{ComplexF64}` for one node. |
 | `check_closure(spins, angles; absolute_tolerance=1e-12, relative_tolerance=1e-12)` | Five node reports and `all_closed`. |
 | `indices_from_intertwiners(spins, intertwiners)` | Five **one-based** Julia indices. |
@@ -123,6 +124,32 @@ Angles are a `20 × 2` matrix (theta, phi in radians), or a sequence of 20 pairs
 the coefficient function takes four labels and four pairs. Noncontiguous
 matrix views are accepted. Node recoupling permutations are demonstrated in
 the example; using the wrong node order changes the physical contraction.
+
+To supply the boundary coefficients directly, pass five vectors (or tuples)
+of real or complex numbers. Each is copied to `Vector{ComplexF64}`, including
+noncontiguous views. Its length must equal the corresponding tensor axis;
+entries follow ascending admissible doubled intertwiners in that node's
+recoupling basis. All real and imaginary components must be finite. The
+contraction is `sum(T[i1,i2,i3,i4,i5] * C1[i1] * C2[i2] * C3[i3] * C4[i4] * C5[i5])`,
+with no conjugation or normalization. Zero vectors are valid. The configured
+pruning policy still applies; set `config.coherent_amplitude.pruning_ratio=0.0`
+when comparing against an unpruned full-tensor contraction.
+
+```julia
+# For the tensor computed above, choose any coefficients of matching lengths.
+C1, C2, C3, C4, C5 = [ones(ComplexF64, n) for n in size(tensor)]
+C1[1] = 2im
+weighted = sf.compute_coherent_amplitude(spins, 2, 1.2, C1, C2, C3, C4, C5;
+                                         backend=sf.Backend.CPU)
+```
+
+You can also reuse vectors from `compute_coherent_coefficients`; the
+[example](../examples/julia_example.jl) shows each node's spin and angle
+permutations. Supplying vectors skips coefficient construction and the
+angle-based closure check, even when `config.coherent_amplitude.check_closure`
+is enabled. Use `check_closure` separately when you also have the normals.
+Both amplitude forms support a positional backend and the same progress
+callback options.
 
 `version()`, `build_info()`, `backend_available(Backend.GPU)`,
 `cuda_device_count()`, and `cuda_device_info(0)` inspect the loaded library.
@@ -249,7 +276,8 @@ ctest --test-dir build-julia -L julia --output-on-failure
 ```
 
 CPU tests check independent coefficient references, fixed/tensor/coherent
-agreement, both simplicity conventions, unequal spins, lifted shells, array
-ownership, storage, invalid inputs, callback failures, and native progress.
+agreement, arbitrary complex coefficient contractions, zero and basis vectors,
+both simplicity conventions, unequal spins, lifted shells, array ownership,
+storage, invalid inputs, callback failures, and native progress.
 The GPU test runs those checks on a real device and explicitly skips when
 CUDA is unavailable. It does not substitute a CPU or mock execution.

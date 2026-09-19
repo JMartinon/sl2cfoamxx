@@ -89,7 +89,7 @@ WithCleanup[Null,
     assert["default association", AssociationQ[defaults]];
     If[!AssociationQ[defaults], Print[defaults]; Exit[1]];
     assert["native version", LibraryVersion[] === BuildInfo[]["Version"]];
-    assert["version value", LibraryVersion[] === "1.0.0"];
+    assert["version value", LibraryVersion[] === "1.0.1"];
     assert["native compiler", StringQ[BuildInfo[]["CompilerID"]]];
     assert["CPU available", BackendAvailableQ["CPU"]];
     assert["pattern enum rejected", FailureQ[BackendAvailableQ[_]]];
@@ -150,9 +150,17 @@ WithCleanup[Null,
         assert["Dot tensor contraction", close[Fold[Dot,array,Reverse[cs]],expected]];
         coherent = ComputeCoherentAmplitude[s,cutoff,1.2,angles,"Backend" -> backend];
         assert["coherent/tensor agreement", close[coherent,expected]];
+        supplied = ComputeCoherentAmplitude[s,cutoff,1.2,Sequence @@ cs];
+        assert["supplied coefficients configured backend", close[supplied,expected]];
+        custom = Table[Table[(n + k I)/(n+k),{k,Length[cs[[n]]]}],{n,5}];
+        customExpected = explicitContraction[array,custom];
+        assert["custom coefficients without conjugation or normalization", close[
+            ComputeCoherentAmplitude[s,cutoff,1.2,Sequence @@ custom,"Backend" -> backend],customExpected]];
         If[backend === "GPU",
             assert["CPU/GPU coherent agreement", close[
-                ComputeCoherentAmplitude[s,cutoff,1.2,angles,"Backend" -> "CPU"],expected]]];
+                ComputeCoherentAmplitude[s,cutoff,1.2,angles,"Backend" -> "CPU"],expected]];
+            assert["CPU/GPU supplied coefficient agreement", close[
+                ComputeCoherentAmplitude[s,cutoff,1.2,Sequence @@ custom,"Backend" -> "CPU"],customExpected]]];
         If[s === spins,
             fixed = ComputeAmplitude[s,intertwiners,cutoff,1.2];
             assert["fixed/tensor agreement", close[fixed,TensorValue[tensor,{2,2,1,2,2}]]]];
@@ -228,6 +236,16 @@ WithCleanup[Null,
     assert["negative gamma coherent", FailureQ[ComputeCoherentAmplitude[spins,0,-1.2,angles]]];
     assert["invalid cutoff", FailureQ[ComputeFullTensor[spins,-1,1.2]]];
     assert["invalid angles", FailureQ[ComputeCoherentAmplitude[spins,0,1.2,Transpose[angles]]]];
+    cs = coefficientVectors[spins];
+    Do[bad = ReplacePart[cs,n -> invalid];
+        assert["invalid coefficient length or value", FailureQ[
+            ComputeCoherentAmplitude[spins,0,1.2,Sequence @@ bad,"Backend" -> backend]]],
+        {n,5}, {invalid,{{},{1}, {1,2,3}, {{1,2}}, {Infinity,1}, {1+I Infinity,1},
+            {Indeterminate,1}, {True,1}, {"coefficient",1}}}];
+    assert["negative gamma supplied coefficients", FailureQ[
+        ComputeCoherentAmplitude[spins,0,-1.2,Sequence @@ cs]]];
+    assert["coefficient unknown option", FailureQ[
+        ComputeCoherentAmplitude[spins,0,1.2,Sequence @@ cs,"Typo" -> 1]]];
     assert["unknown option", FailureQ[ComputeFullTensor[spins,0,1.2,"Typo" -> 1]]];
     assert["arbitrary precision real input", NumericQ[ComputeAmplitude[spins,intertwiners,0,6/5]]];
     invalidfile = FileNameJoin[{directory,"invalid.sl2cxx"}]; Export[invalidfile,"invalid","Text"];
@@ -246,10 +264,20 @@ WithCleanup[Null,
         "ProgressFunction" -> (AppendTo[events,#] &)];
     assert["coherent progress ends", Last[events]["Status"] === "completed"];
     assert["coherent progress operation", AllTrue[events, #["Operation"] === "coherent_amplitude" &]];
+    events = {}; cs = coefficientVectors[spins];
+    supplied = ComputeCoherentAmplitude[spins,1,1.2,Sequence @@ cs,"Backend" -> backend,
+        "ProgressFunction" -> (AppendTo[events,#] &)];
+    assert["supplied coefficient progress result", close[supplied,explicitContraction[Normal[tensor],cs]]];
+    assert["supplied coefficient progress ends", Length[events] >= 2 && Last[events]["Status"] === "completed"];
+    assert["supplied coefficient progress operation", AllTrue[events, #["Operation"] === "coherent_amplitude" &]];
+    assert["coefficient callback backend required", FailureQ[
+        ComputeCoherentAmplitude[spins,1,1.2,Sequence @@ cs,"ProgressFunction" -> Identity]]];
     assert["callback backend required", FailureQ[ComputeFullTensor[spins,1,1.2,"ProgressFunction" -> Identity]]];
     assert["non-function callback rejected", FailureQ[ComputeFullTensor[spins,1,1.2,
         "Backend" -> backend,"ProgressFunction" -> True]]];
     marker = Failure["CallbackFailure",<|"MessageTemplate" -> "test callback"|>];
+    assert["coefficient callback Failure preserved", ComputeCoherentAmplitude[spins,1,1.2,
+        Sequence @@ cs,"Backend" -> backend,"ProgressFunction" -> (marker &)] === marker];
     assert["callback Failure preserved", ComputeFullTensor[spins,1,1.2,"Backend" -> backend,
         "ProgressFunction" -> (marker &)] === marker];
     assert["callback Throw preserved", Catch[ComputeFullTensor[spins,1,1.2,"Backend" -> backend,
@@ -276,6 +304,7 @@ WithCleanup[Null,
         If[AssociationQ[notebookResult],
             assert["notebook packed array", Developer`PackedArrayQ[notebookResult["Array"]]];
             assert["notebook tensor shape", Dimensions[notebookResult["Array"]] === {2,2,2,2,2}];
+            assert["notebook coefficient overload", close[notebookResult["CoefficientAmplitude"],notebookResult["CoherentAmplitude"]]];
             assert["notebook progress", Length[notebookResult["ProgressEvents"]] >= 4];
             assert["notebook cache cleanup", !DirectoryQ[CurrentConfig[]["Tensors"]["Directory"]]]
         ]

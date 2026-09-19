@@ -14,7 +14,7 @@ BackendAvailableQ::usage = "BackendAvailableQ[\"CPU\"|\"GPU\"] tests native back
 CUDADeviceCount::usage = "CUDADeviceCount[] returns the number of visible CUDA devices; zero for CPU-only builds.";
 CUDADeviceInfo::usage = "CUDADeviceInfo[ordinal] returns native device information. CUDA ordinals are zero-based.";
 ComputeAmplitude::usage = "ComputeAmplitude[spins, intertwiners, Dl, gamma, \"CachePolicy\" -> \"disabled\"] computes one real fixed-intertwiner amplitude on CPU. Spin labels are doubled integers.";
-ComputeCoherentAmplitude::usage = "ComputeCoherentAmplitude[spins, Dl, gamma, angles, \"Backend\" -> Automatic, \"ProgressFunction\" -> None] computes a complex CPU/GPU coherent amplitude. Angles contain 20 {theta,phi} pairs.";
+ComputeCoherentAmplitude::usage = "ComputeCoherentAmplitude[spins, Dl, gamma, angles, options] computes a complex CPU/GPU coherent amplitude from 20 {theta,phi} pairs. ComputeCoherentAmplitude[spins, Dl, gamma, C1, C2, C3, C4, C5, options] contracts caller-supplied finite complex vectors in canonical intertwiner order, without conjugation or normalization. Options are \"Backend\" -> Automatic and \"ProgressFunction\" -> None.";
 ComputeFullTensor::usage = "ComputeFullTensor[spins, Dl, gamma, \"Backend\" -> Automatic, \"ProgressFunction\" -> None, \"ReturnType\" -> \"Tensor\"] returns a managed FullTensorObject; ReturnType -> \"Array\" returns an independent canonical packed array.";
 ComputeCoherentCoefficients::usage = "ComputeCoherentCoefficients[spins4, angles4] returns the four-valent coherent coefficient vector as packed machine complex values.";
 CheckClosure::usage = "CheckClosure[spins, angles, \"AbsoluteTolerance\" -> 10^-12, \"RelativeTolerance\" -> 10^-12] reports closure for all five nodes without printing.";
@@ -246,6 +246,11 @@ anglesVector[angles_, rows_Integer] := (
   finiteReal[#, "angle"] & /@ Flatten[angles]
 );
 complexValue[pair_List] := N[First[pair], MachinePrecision] + I N[Last[pair], MachinePrecision];
+complexVector[values_, name_String] := (
+  require[ListQ[values] && AllTrue[values, NumericQ],
+    name <> " must be a vector of finite real or complex numbers."];
+  {finiteReal[Re[#], name <> " real part"], finiteReal[Im[#], name <> " imaginary part"]} & /@ values
+);
 
 Options[ComputeAmplitude] = {"CachePolicy" -> "disabled"};
 ComputeAmplitude[spins_, intertwiners_, Dl_, gamma_, opts : OptionsPattern[]] := api[
@@ -353,6 +358,19 @@ ComputeCoherentAmplitude[spins_, Dl_, gamma_, angles_, opts : OptionsPattern[]] 
     callNative[11, integers, reals]]];
   complexValue[result]
  ]];
+ComputeCoherentAmplitude[spins_, Dl_, gamma_, c1_, c2_, c3_, c4_, c5_, opts : OptionsPattern[]] := api[
+ Module[{s, cutoff, parameter, coefficients, callback, settings, integers, reals, result},
+  validateOptions[ComputeCoherentAmplitude, {opts}];
+  s = integerVector[spins, 10, "spins"]; cutoff = nonnegativeInteger[Dl, "Dl"];
+  parameter = finiteReal[gamma, "gamma"];
+  coefficients = MapIndexed[complexVector[#1, "C" <> ToString[First[#2]]] &, {c1, c2, c3, c4, c5}];
+  callback = OptionValue["ProgressFunction"]; settings = progressSettings[OptionValue["Backend"], callback];
+  integers = Join[{cutoff, First[settings]}, s, Length /@ coefficients];
+  reals = Prepend[Flatten[coefficients], parameter];
+  result = checked[If[TrueQ[settings[[2]]], runJob[55, integers, reals, callback, settings[[3]]],
+    callNative[16, integers, reals]]];
+  complexValue[result]
+ ]];
 Options[ComputeFullTensor] = {"Backend" -> Automatic, "ProgressFunction" -> None, "ReturnType" -> "Tensor"};
 ComputeFullTensor[spins_, Dl_, gamma_, opts : OptionsPattern[]] := api[
  Module[{s, cutoff, parameter, callback, settings, returnType, result},
@@ -378,7 +396,7 @@ BackendAvailableQ[arguments___] := failure["InvalidArgument", "BackendAvailableQ
 CUDADeviceCount[arguments___] := failure["InvalidArgument", "CUDADeviceCount expects no arguments."];
 CUDADeviceInfo[arguments___] := failure["InvalidArgument", "CUDADeviceInfo expects one optional zero-based ordinal."];
 ComputeAmplitude[arguments___] := failure["InvalidArgument", "ComputeAmplitude expects spins, intertwiners, Dl, gamma, and optional rules."];
-ComputeCoherentAmplitude[arguments___] := failure["InvalidArgument", "ComputeCoherentAmplitude expects spins, Dl, gamma, angles, and optional rules."];
+ComputeCoherentAmplitude[arguments___] := failure["InvalidArgument", "ComputeCoherentAmplitude expects spins, Dl, gamma, then angles or five coefficient vectors, and optional rules."];
 ComputeFullTensor[arguments___] := failure["InvalidArgument", "ComputeFullTensor expects spins, Dl, gamma, and optional rules."];
 ComputeCoherentCoefficients[arguments___] := failure["InvalidArgument", "ComputeCoherentCoefficients expects four spins and four angle pairs."];
 CheckClosure[arguments___] := failure["InvalidArgument", "CheckClosure expects spins, angles, and optional tolerance rules."];

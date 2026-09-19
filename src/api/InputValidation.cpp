@@ -312,6 +312,55 @@ void validate_coherent_coefficients_inputs(
     validate_angles(angles, "angles", function_name);
 }
 
+void validate_coherent_amplitude_inputs(
+    const Spins& spins,
+    std::size_t Dl,
+    double gamma,
+    const std::array<const CoherentCoefficients*, 5>& coefficients)
+{
+    const std::string function_name =
+        display_context("compute_coherent_amplitude");
+    validate_common_inputs(spins, Dl, gamma, function_name);
+    for (std::size_t node = 0; node < coefficients.size(); ++node) {
+        const IntertwinerRange range = admissible_range(spins, nodes[node]);
+        const auto expected = static_cast<std::size_t>(
+            (range.upper - range.lower) / 2 + 1);
+        const auto& values = *coefficients[node];
+        const std::string name = "C" + std::to_string(node + 1);
+        if (values.size() != expected) {
+            throw std::invalid_argument(
+                function_name + ": " + name + " must contain exactly " +
+                std::to_string(expected) + " coefficients in ascending "
+                "admissible doubled intertwiner order; received " +
+                std::to_string(values.size()));
+        }
+        for (std::size_t index = 0; index < values.size(); ++index) {
+            if (!std::isfinite(values[index].real()) ||
+                !std::isfinite(values[index].imag())) {
+                throw std::invalid_argument(
+                    function_name + ": " + name + '[' +
+                    std::to_string(index) + "] must have finite real and "
+                    "imaginary parts");
+            }
+        }
+    }
+}
+
+void validate_coherent_amplitude_inputs(
+    const Spins& spins,
+    std::size_t Dl,
+    double gamma,
+    const std::array<const CoherentCoefficients*, 5>& coefficients,
+    Backend backend)
+{
+    if (backend != Backend::CPU && backend != Backend::GPU) {
+        throw std::invalid_argument(
+            display_context("compute_coherent_amplitude") +
+            ": unknown backend");
+    }
+    validate_coherent_amplitude_inputs(spins, Dl, gamma, coefficients);
+}
+
 void validate_closure_inputs(
     const Spins& spins,
     const BoundaryAngles& angles,

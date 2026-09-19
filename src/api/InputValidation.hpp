@@ -32,6 +32,19 @@ void validate_coherent_coefficients_inputs(
     const TetrahedronSpins& spins,
     const TetrahedronAngles& angles);
 
+void validate_coherent_amplitude_inputs(
+    const Spins& spins,
+    std::size_t Dl,
+    double gamma,
+    const std::array<const CoherentCoefficients*, 5>& coefficients);
+
+void validate_coherent_amplitude_inputs(
+    const Spins& spins,
+    std::size_t Dl,
+    double gamma,
+    const std::array<const CoherentCoefficients*, 5>& coefficients,
+    Backend backend);
+
 void validate_closure_inputs(
     const Spins& spins,
     const BoundaryAngles& angles,

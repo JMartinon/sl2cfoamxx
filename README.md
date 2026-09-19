@@ -31,7 +31,8 @@ Compute individual amplitudes or full vertex tensors from C++, Python, Julia, or
 - Rank-five tensors with symmetry-aware storage, memory mapping, and portable
   files shared across languages.
 - Native NumPy/einsum, Julia array, and Mathematica tensor operations.
-- Coherent-state coefficients, closure checks, and CPU/GPU progress reporting.
+- Coherent-state coefficients, caller-supplied complex boundary vectors,
+  closure checks, and CPU/GPU progress reporting.
 - Seed-free Wigner recurrences, with no external Wigner library or symbol tables.
 
 Public spins and intertwiners are **doubled integers**: `1` represents physical

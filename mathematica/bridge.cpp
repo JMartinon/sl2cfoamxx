@@ -199,6 +199,29 @@ struct Arguments {
         for (std::size_t i = 0; i < N; ++i) result[i] = {reals[start + 2*i], reals[start + 2*i + 1]};
         return result;
     }
+    std::array<s::CoherentCoefficients, 5> coefficients(std::size_t start) const
+    {
+        sizes(start + 5, nr);
+        if (nr == 0) throw std::invalid_argument("missing coherent amplitude gamma");
+        std::array<std::size_t, 5> counts;
+        std::size_t offset = 1;
+        for (std::size_t n = 0; n < counts.size(); ++n) {
+            counts[n] = nonnegative<std::size_t>(integers[start + n]);
+            if (counts[n] > (nr - offset) / 2)
+                throw std::invalid_argument("coefficient values do not match vector lengths");
+            offset += 2 * counts[n];
+        }
+        if (offset != nr)
+            throw std::invalid_argument("coefficient values do not match vector lengths");
+        std::array<s::CoherentCoefficients, 5> result;
+        offset = 1;
+        for (std::size_t n = 0; n < result.size(); ++n) {
+            result[n].reserve(counts[n]);
+            for (std::size_t k = 0; k < counts[n]; ++k, offset += 2)
+                result[n].emplace_back(reals[offset], reals[offset + 1]);
+        }
+        return result;
+    }
     s::FullTensor::shape_type shape(std::size_t start) const
     {
         s::FullTensor::shape_type result;
@@ -451,6 +474,15 @@ std::complex<double> coherent(const s::Spins& spins, std::size_t Dl, double gamm
     if (backend == -1) return s::compute_coherent_amplitude(spins, Dl, gamma, angles);
     return s::compute_coherent_amplitude(spins, Dl, gamma, angles, enumeration<s::Backend>(backend, 1));
 }
+std::complex<double> coherent(const s::Spins& spins, std::size_t Dl, double gamma,
+                             const std::array<s::CoherentCoefficients, 5>& coefficients, mint backend)
+{
+    const auto& c = coefficients;
+    if (backend == -1)
+        return s::compute_coherent_amplitude(spins, Dl, gamma, c[0], c[1], c[2], c[3], c[4]);
+    return s::compute_coherent_amplitude(spins, Dl, gamma, c[0], c[1], c[2], c[3], c[4],
+                                         enumeration<s::Backend>(backend, 1));
+}
 
 void dispatch(Json& json, WolframLibraryData library, mint opcode, const Arguments& args)
 {
@@ -494,6 +526,11 @@ void dispatch(Json& json, WolframLibraryData library, mint opcode, const Argumen
     case 12:
         args.sizes(13,1); produce(json, i[0], [&] {
             return full(args.spins<10>(3), nonnegative<std::size_t>(i[1]), r[0], i[2]); }); break;
+    case 16: {
+        const auto coefficients = args.coefficients(12);
+        json.complex(coherent(args.spins<10>(2), nonnegative<std::size_t>(i[0]),
+                              r[0], coefficients, i[1])); break;
+    }
     case 13: {
         args.sizes(4,8); const auto result = s::compute_coherent_coefficients(args.spins<4>(), args.angles<4>());
         json.raw("["); bool first = true;
@@ -572,22 +609,28 @@ void dispatch(Json& json, WolframLibraryData library, mint opcode, const Argumen
             return value;
         }); break;
     }
-    case 50: case 51: {
+    case 50: case 51: case 55: {
         const bool is_full = opcode == 50;
-        args.sizes(is_full?14:13,is_full?1:41);
+        const bool from_coefficients = opcode == 55;
+        auto coefficients = from_coefficients ? args.coefficients(13)
+            : std::array<s::CoherentCoefficients, 5>{};
+        if (!from_coefficients) args.sizes(is_full?14:13,is_full?1:41);
         const auto target = job(i[0]); std::lock_guard lock(target->control);
         if(target->started) throw std::invalid_argument("job has already started");
         const std::size_t offset = is_full ? 1 : 0;
         const auto Dl = nonnegative<std::size_t>(i[1+offset]);
         const auto backend = enumeration<s::Backend>(i[2+offset],1);
         const auto spins = args.spins<10>(3+offset); const double gamma = r[0];
-        const auto normals = is_full ? s::BoundaryAngles{} : args.angles<20>(1);
+        const auto normals = opcode == 51 ? args.angles<20>(1) : s::BoundaryAngles{};
         if(is_full) target->destination = std::make_unique<Reservation>(tensor_slot(i[1]));
         try {
-            target->worker = std::thread([p=target.get(),is_full,Dl,backend,spins,gamma,normals] {
+            target->worker = std::thread([p=target.get(),is_full,from_coefficients,Dl,backend,spins,gamma,normals,
+                                          coefficients=std::move(coefficients)] {
                 try {
                     auto progress = [p](const s::ProgressEvent& event) {p->push(event);};
                     if(is_full) p->tensor=std::make_shared<s::FullTensor>(s::compute_full_tensor(spins,Dl,gamma,backend,progress));
+                    else if(from_coefficients) p->amplitude=s::compute_coherent_amplitude(spins,Dl,gamma,
+                        coefficients[0],coefficients[1],coefficients[2],coefficients[3],coefficients[4],backend,progress);
                     else p->amplitude=s::compute_coherent_amplitude(spins,Dl,gamma,normals,backend,progress);
                 } catch (...) { p->failure=std::current_exception(); }
                 p->done.store(true,std::memory_order_release);

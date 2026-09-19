@@ -77,6 +77,43 @@ if (!closure.all_closed) {
 }
 ```
 
+### Caller-supplied coefficients
+
+Use the five-vector overload to contract any boundary coefficient vectors,
+including vectors returned by `compute_coherent_coefficients()`:
+
+```cpp
+const auto amplitude = sl2cfoamxx::compute_coherent_amplitude(
+    spins, Dl, gamma, C1, C2, C3, C4, C5);
+const auto cpu_amplitude = sl2cfoamxx::compute_coherent_amplitude(
+    spins, Dl, gamma, C1, C2, C3, C4, C5, sl2cfoamxx::Backend::CPU);
+const auto tracked_amplitude = sl2cfoamxx::compute_coherent_amplitude(
+    spins, Dl, gamma, C1, C2, C3, C4, C5, sl2cfoamxx::Backend::CPU,
+    [](const sl2cfoamxx::ProgressEvent& event) { /* inspect progress */ });
+```
+
+Each `C` is a `CoherentCoefficients` (`std::vector<std::complex<double>>`).
+The five vectors use the node bases in the table above, pairing the first two
+spins with the final two in each row. Supply every admissible doubled
+intertwiner in ascending order with stride two. The length must equal the
+corresponding canonical full-tensor extent; sparse vectors must include
+explicit zeros for omitted lanes. Each real and imaginary part must be
+finite. Wrong lengths, NaNs, and infinities throw `std::invalid_argument`
+before computation or progress reporting begins.
+
+With `pruning_ratio = 0`, the result is the plain multilinear contraction
+
+```text
+sum A[i1,i2,i3,i4,i5] * C1[i1] * C2[i2] * C3[i3] * C4[i4] * C5[i5].
+```
+
+The vectors are neither normalized nor conjugated or modified. Scaling one
+vector scales the amplitude by the same complex factor, and any zero vector
+gives zero. CPU/GPU selection, the simplicity constraint, C1 pruning, and
+progress callback replacement follow the angle overloads. No full tensor is
+materialized by this call. Closure checking is skipped even if enabled in
+the configuration, since arbitrary coefficients do not supply normals.
+
 ### Closure and pruning
 
 Closure vectors and scales use physical `j=J/2`, not doubled labels. The
@@ -84,8 +121,8 @@ default criterion at each node is
 `residual_norm <= 1e-12 + 1e-12 * scale`; both tolerances can be supplied
 explicitly. The checker returns data and never prints.
 
-The same check can be requested automatically for every coherent-amplitude
-call. A failed check emits one warning and continues; because this is an
+The same check can be requested automatically for coherent-amplitude
+calls with angles. A failed check emits one warning and continues; because this is an
 explicit validation request, the warning is emitted even when informational
 verbosity is `silent`. Use the public `check_closure()` result instead when a
 failed check should change application control flow.
@@ -99,7 +136,8 @@ config.coherent_amplitude.pruning_ratio = 1.0e-8;
 sl2cfoamxx::configure(config);
 ```
 
-`pruning_ratio` must be finite and in `[0,1]`. It removes C1 lanes satisfying
+`pruning_ratio` applies to both angle and coefficient inputs, and must be
+finite and in `[0,1]`. It removes C1 lanes satisfying
 `|C1[i1]| < pruning_ratio * max(|C1|)` and skips the corresponding contraction
 work; it does not alter the coefficient vector returned by
 `compute_coherent_coefficients()`, prune C2 through C5, or provide a rigorous

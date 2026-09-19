@@ -107,6 +107,7 @@ aliases. New code should use `DSpins`, `DIntertwiners`, and
 | --- | --- | --- |
 | `compute_amplitude(spins, intertwiners, Dl, gamma)` | One real fixed-intertwiner amplitude | CPU |
 | `compute_coherent_amplitude(spins, Dl, gamma, angles)` | One complex coherent amplitude | CPU/GPU |
+| `compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5)` | One complex amplitude from supplied coefficients | CPU/GPU |
 | `compute_full_tensor(spins, Dl, gamma)` | A rank-five `FullTensor` | CPU/GPU |
 | `compute_coherent_coefficients(spins4, angles4)` | Complex coefficients for one tetrahedron | CPU |
 | `check_closure(spins, angles)` | Five node reports and `all_closed` | CPU |
@@ -136,6 +137,23 @@ const auto closure = sl2cfoamxx::check_closure(spins, angles);
 const auto amplitude = sl2cfoamxx::compute_coherent_amplitude(
     spins, Dl, gamma, angles);
 ```
+
+Alternatively, supply five `CoherentCoefficients` vectors
+(`std::vector<std::complex<double>>`) in the canonical node bases:
+
+```cpp
+const auto amplitude = sl2cfoamxx::compute_coherent_amplitude(
+    spins, Dl, gamma, C1, C2, C3, C4, C5);
+```
+
+Each vector must contain exactly one finite coefficient per admissible
+intertwiner, in ascending doubled label order, matching its full-tensor axis.
+The contraction multiplies the supplied coefficients without conjugating or
+normalizing them; zero vectors are accepted. Geometric closure checking is
+skipped for this overload because it has no normals. Both forms accept a
+trailing backend and, after that, an optional per-call progress callback.
+See the [coefficient input contract](cpp-reference.md#caller-supplied-coefficients)
+for the bases, ordering, and contraction formula.
 
 `check_closure()` returns data without printing and accepts nonnegative spin
 assignments even when they do not admit intertwiners. Each node passes when

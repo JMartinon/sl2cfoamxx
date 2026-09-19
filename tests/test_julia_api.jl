@@ -116,6 +116,27 @@ mktempdir() do directory
             @test abs(expected) > 1e-24
             actual = sf.compute_coherent_amplitude(spins, cutoff, 1.2, ANGLES; backend=BACKEND)
             @test numerically_equal(actual, expected)
+            @test numerically_equal(sf.compute_coherent_amplitude(
+                spins, cutoff, 1.2, cs...; backend=BACKEND), expected)
+            # Independent complex weights exercise every axis, phase, and
+            # magnitude without relying on coherent-state normalization.
+            custom = [ComplexF64[complex((2n+k)/10, (n-3k)/7) for k in axes(array,n)] for n in 1:5]
+            custom_expected = contract(array, custom)
+            @test numerically_equal(sf.compute_coherent_amplitude(
+                spins, cutoff, 1.2, custom...; backend=BACKEND), custom_expected)
+            if spins == SPINS && cutoff == 0
+                @test numerically_equal(sf.compute_coherent_amplitude(
+                    spins, cutoff, 1.2, custom...), custom_expected)
+                @test numerically_equal(sf.compute_coherent_amplitude(
+                    spins, cutoff, 1.2, custom..., BACKEND), custom_expected)
+                selected = [ComplexF64[0,1], ComplexF64[0,1], ComplexF64[1,0],
+                            ComplexF64[0,1], ComplexF64[0,1]]
+                @test numerically_equal(sf.compute_coherent_amplitude(
+                    spins, cutoff, 1.2, selected...; backend=BACKEND), tensor[2,2,1,2,2])
+                selected[1] .= 0
+                @test sf.compute_coherent_amplitude(
+                    spins, cutoff, 1.2, selected...; backend=BACKEND) == 0
+            end
             if BACKEND == sf.Backend.GPU
                 @test numerically_equal(sf.compute_coherent_amplitude(
                     spins, cutoff, 1.2, ANGLES; backend=sf.Backend.CPU), expected)
@@ -241,6 +262,25 @@ mktempdir() do directory
         padded = zeros(20,4); padded[:,1:2:4] .= ANGLES
         @test sf.compute_coherent_amplitude(SPINS,0,1.2,view(padded,:,1:2:4)) ==
               sf.compute_coherent_amplitude(SPINS,0,1.2,ANGLES)
+        cs = coefficients(SPINS)
+        @test_throws ArgumentError sf.compute_coherent_amplitude(SPINS,0,-1.2,cs...)
+        for node in 1:5, invalid in (ComplexF64[], vcat(cs[node], 0),
+                                     ComplexF64[NaN,0], ComplexF64[0,Inf*im])
+            bad = copy(cs); bad[node] = invalid
+            @test_throws ArgumentError sf.compute_coherent_amplitude(SPINS,0,1.2,bad...)
+        end
+        for invalid in (zeros(2,1), "coefficients", [true,false], ["1","0"])
+            @test_throws ArgumentError sf.compute_coherent_amplitude(
+                SPINS,0,1.2,invalid,cs[2:end]...)
+        end
+        # Views, tuples, and real vectors safely convert to owned complex data.
+        padded_cs = [repeat(c; inner=2) for c in cs]
+        strided_cs = [view(c,1:2:length(c)) for c in padded_cs]
+        @test sf.compute_coherent_amplitude(SPINS,0,1.2,strided_cs...) ==
+              sf.compute_coherent_amplitude(SPINS,0,1.2,cs...)
+        real_cs = [real.(c) for c in cs]
+        @test sf.compute_coherent_amplitude(SPINS,0,1.2,Tuple.(real_cs)...) ==
+              sf.compute_coherent_amplitude(SPINS,0,1.2,[ComplexF64.(c) for c in real_cs]...)
         invalidfile = joinpath(directory,"invalid.sl2cxx")
         write(invalidfile,"not a tensor")
         caught = try sf.load_tensor(invalidfile); nothing catch error; error end
@@ -277,6 +317,14 @@ mktempdir() do directory
         @test first(events).status == sf.ProgressStatus.started
         @test last(events).status == sf.ProgressStatus.completed
         @test all(e.operation == sf.ProgressOperation.coherent_amplitude for e in events)
+        empty!(events)
+        cs = coefficients(SPINS)
+        weighted = sf.compute_coherent_amplitude(SPINS,1,1.2,cs...; backend=BACKEND, progress=report)
+        @test numerically_equal(weighted, contract(Array(tensor), cs))
+        @test first(events).status == sf.ProgressStatus.started
+        @test last(events).status == sf.ProgressStatus.completed
+        @test all(e.operation == sf.ProgressOperation.coherent_amplitude for e in events)
+        @test_throws ArgumentError sf.compute_coherent_amplitude(SPINS,1,1.2,cs...; progress=report)
         callback_failure = ErrorException("Julia callback failure")
         caught = try sf.compute_full_tensor(SPINS,1,1.2; backend=BACKEND, progress=e->throw(callback_failure))
             nothing catch error; error end

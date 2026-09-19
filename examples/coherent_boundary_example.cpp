@@ -76,20 +76,39 @@ void test_case(
         throw std::runtime_error(std::string(name) + " data do not close");
     }
 
-    // The one-node API uses matching spins and angle pairs position by
-    // position. This is C1; compute_coherent_amplitude gathers C2--C5 itself.
+    // Build the five vectors in the canonical full-tensor recoupling bases.
+    // The one-node API matches spins and angle pairs position by position.
     const CoherentCoefficients C1 = compute_coherent_coefficients(
         {{spins[0], spins[1], spins[2], spins[3]}},
         {{angles[0], angles[1], angles[2], angles[3]}});
+    const CoherentCoefficients C2 = compute_coherent_coefficients(
+        {{spins[4], spins[5], spins[6], spins[0]}},
+        {{angles[5], angles[6], angles[7], angles[4]}});
+    const CoherentCoefficients C3 = compute_coherent_coefficients(
+        {{spins[7], spins[8], spins[1], spins[4]}},
+        {{angles[10], angles[11], angles[8], angles[9]}});
+    const CoherentCoefficients C4 = compute_coherent_coefficients(
+        {{spins[9], spins[2], spins[5], spins[7]}},
+        {{angles[15], angles[12], angles[13], angles[14]}});
+    const CoherentCoefficients C5 = compute_coherent_coefficients(
+        {{spins[3], spins[6], spins[8], spins[9]}},
+        {{angles[16], angles[17], angles[18], angles[19]}});
 
     constexpr std::size_t Dl = 2;
     constexpr double gamma = 1.2;
     const Complex amplitude = compute_coherent_amplitude(
         spins, Dl, gamma, angles);
+    // These vectors can also come from the caller's own boundary state.
+    // Their complex phases and normalization are preserved.
+    const Complex supplied_amplitude = compute_coherent_amplitude(
+        spins, Dl, gamma, C1, C2, C3, C4, C5);
     const double allowed = 5.0e-26 +
         5.0e-9 * std::max(std::abs(expected), 1.0e-300);
     if (std::abs(amplitude - expected) > allowed) {
         throw std::runtime_error(std::string(name) + " amplitude mismatch");
+    }
+    if (std::abs(supplied_amplitude - amplitude) > allowed) {
+        throw std::runtime_error(std::string(name) + " coefficient amplitude mismatch");
     }
 
     std::cout << name << ": closure=passed, C1 coefficients=" << C1.size()

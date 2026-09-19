@@ -64,7 +64,7 @@ PYTHONPATH="$PWD/build-python/python" python3 examples/python_example.py
 
 The single [`python_example.py`](../examples/python_example.py) covers fixed
 and coherent amplitudes, full tensors, complete Euclidean boundary angles,
-closure, coefficient generation, NumPy arrays, persistence, and CPU/GPU
+closure, coefficient generation and supplied vectors, NumPy arrays, persistence, and CPU/GPU
 progress. Add `--einsum` for optional coherent and tensor/tensor contractions.
 Its default half-integer coherent amplitude is checked against the retained
 Julia reference. Run it with the same `PYTHONPATH` and interpreter.
@@ -182,6 +182,33 @@ or `""` to `config.tensors.output_path`.
 `check_closure(spins, angles, absolute_tolerance=1e-12,
 relative_tolerance=1e-12)` returns five node reports and `all_closed`; it also
 supports `bool(result)`.
+
+To supply your own boundary coefficients, use the overload
+`compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5, backend=None)`.
+Each argument accepts a list, tuple, or one-dimensional NumPy array of finite
+complex numbers, including strided arrays. Its length must match the complete
+admissible intertwiner range of its tensor axis, in ascending doubled-label
+order. The [basis conventions](scientific-conventions.md#supplied-boundary-coefficients)
+specify the five recoupling bases.
+
+```python
+# For ten doubled spins equal to 1, every tensor axis has two entries.
+spins = [1] * 10
+C1 = [1.0, 0.5j]
+C2 = [0.2 + 0.3j, 1.0]
+C3 = [1.0, -1.0j]
+C4 = [0.5, 0.5]
+C5 = [1.0j, 1.0]
+custom = sf.compute_coherent_amplitude(
+    spins, 0, 1.2, C1, C2, C3, C4, C5, backend=sf.Backend.CPU)
+```
+
+The contraction uses the supplied values without normalization or conjugation.
+Zero entries are allowed; malformed lengths or nonfinite entries raise
+`ValueError`. Geometric closure checking is skipped because no angles are
+supplied. The configured C1 pruning ratio still applies; set it to `0.0` to
+retain every nonzero coefficient. Both overloads support the existing
+`progress=` callback with an explicit `backend=`.
 
 The fixed-intertwiner computation is CPU-only. Coherent and tensor calls use
 the configured backend when omitted; `backend=sf.Backend.CPU` or `.GPU`

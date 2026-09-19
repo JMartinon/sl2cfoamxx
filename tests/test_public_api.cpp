@@ -298,8 +298,7 @@ void require_throws(Function&& function, const char* message)
     throw std::runtime_error(message);
 }
 
-std::complex<double> contract_boundary(
-    const sl2cfoamxx::FullTensor& tensor,
+std::array<sl2cfoamxx::CoherentCoefficients, 5> boundary_coefficients(
     const sl2cfoamxx::DSpins& spins,
     const sl2cfoamxx::BoundaryAngles& angles)
 {
@@ -319,6 +318,16 @@ std::complex<double> contract_boundary(
             node_angles[leg] = angles[angle_rows[node][leg]];
         }
         coefficients[node] = compute_coherent_coefficients(node_spins, node_angles);
+    }
+    return coefficients;
+}
+
+std::complex<double> contract_coefficients(
+    const sl2cfoamxx::FullTensor& tensor,
+    const std::array<sl2cfoamxx::CoherentCoefficients, 5>& coefficients)
+{
+    using namespace sl2cfoamxx;
+    for (std::size_t node = 0; node < coefficients.size(); ++node) {
         require(coefficients[node].size() == tensor.shape()[node],
                 "coherent coefficient axis does not match full tensor");
     }
@@ -359,9 +368,10 @@ void check_coherent_workflows(const sl2cfoamxx::LibraryConfig& initial)
         config.simplicity_constraint = simplicity;
         configure(config);
         for (const auto& spins : boundaries) {
+            const auto coefficients = boundary_coefficients(spins, asymmetric_angles);
             for (std::size_t cutoff = 0; cutoff <= 2; ++cutoff) {
                 const auto tensor = compute_full_tensor(spins, cutoff, 1.2, Backend::CPU);
-                const auto expected = contract_boundary(tensor, spins, asymmetric_angles);
+                const auto expected = contract_coefficients(tensor, coefficients);
                 for (const auto backend : {Backend::CPU, Backend::GPU}) {
 #if !SL2CFOAMXX_TEST_WITH_CUDA
                     if (backend == Backend::GPU) continue;
@@ -379,6 +389,19 @@ void check_coherent_workflows(const sl2cfoamxx::LibraryConfig& initial)
                             events.back().total > 0 &&
                             events.back().completed == events.back().total,
                             "coherent progress lifecycle did not complete");
+                    events.clear();
+                    const auto supplied = compute_coherent_amplitude(
+                        spins, cutoff, 1.2, coefficients[0], coefficients[1],
+                        coefficients[2], coefficients[3], coefficients[4], backend,
+                        [&](const ProgressEvent& event) { events.push_back(event); });
+                    require(relative_error(supplied, expected) <= 5.0e-10,
+                            "supplied coefficients disagree with contracted tensor");
+                    require(events.size() >= 2 &&
+                            events.front().status == ProgressStatus::started &&
+                            events.back().status == ProgressStatus::completed &&
+                            events.back().backend == backend &&
+                            events.back().completed == events.back().total,
+                            "supplied coefficient progress lifecycle did not complete");
                 }
             }
         }
@@ -413,6 +436,114 @@ void check_coherent_workflows(const sl2cfoamxx::LibraryConfig& initial)
     std::cout << "coherent contraction, references, closure, and progress: PASS\n";
 }
 
+void check_supplied_coefficient_workflows(const sl2cfoamxx::LibraryConfig& initial)
+{
+    using namespace sl2cfoamxx;
+    LibraryConfig config = initial;
+    config.cpu_threads = 1;
+    config.backend = Backend::CPU;
+    config.verbosity = Verbosity::silent;
+    config.progress_bar = false;
+    config.coherent_amplitude.pruning_ratio = 0.0;
+    config.coherent_amplitude.check_closure = true;
+    config.tensors.storage = TensorStorage::in_memory_dense;
+    config.tensors.reuse_existing = false;
+    config.tensors.output_path.clear();
+    std::ostringstream diagnostics;
+    config.log_stream = &diagnostics;
+    std::size_t configured_events = 0;
+    config.progress_callback = [&](const ProgressEvent&) { ++configured_events; };
+    const DSpins spins{{2,1,3,2,1,1,2,1,1,1}};
+    for (const auto simplicity : {SimplicityConstraint::gamma_j,
+                                  SimplicityConstraint::gamma_j_p1}) {
+        config.simplicity_constraint = simplicity;
+        configure(config);
+        const auto tensor = compute_full_tensor(spins, 1, 1.2, Backend::CPU, {});
+        std::array<CoherentCoefficients, 5> coefficients;
+        for (std::size_t node = 0; node < coefficients.size(); ++node) {
+            for (std::size_t index = 0; index < tensor.shape()[node]; ++index) {
+                coefficients[node].emplace_back(
+                    0.35 + 0.21 * node - 0.13 * index,
+                    -0.41 + 0.17 * node + 0.19 * index);
+            }
+        }
+        const auto original = coefficients;
+        const auto expected = contract_coefficients(tensor, coefficients);
+        configured_events = 0;
+        require(relative_error(compute_coherent_amplitude(
+                    spins, 1, 1.2, coefficients[0], coefficients[1],
+                    coefficients[2], coefficients[3], coefficients[4]), expected)
+                    <= 5.0e-10,
+                "default supplied coefficient overload disagrees with tensor");
+        require(configured_events >= 2,
+                "supplied coefficients did not use configured callback");
+        for (const auto backend : {Backend::CPU, Backend::GPU}) {
+#if !SL2CFOAMXX_TEST_WITH_CUDA
+            if (backend == Backend::GPU) continue;
+#endif
+            configured_events = 0;
+            const auto value = compute_coherent_amplitude(
+                spins, 1, 1.2, coefficients[0], coefficients[1], coefficients[2],
+                coefficients[3], coefficients[4], backend, {});
+            require(relative_error(value, expected) <= 5.0e-10,
+                    "arbitrary complex coefficients disagree with tensor");
+            require(configured_events == 0,
+                    "per-call empty callback did not replace configured callback");
+            const std::complex<double> scale{-1.3, 0.7};
+            for (auto& value : coefficients[1]) value *= scale;
+            const auto scaled = compute_coherent_amplitude(
+                spins, 1, 1.2, coefficients[0], coefficients[1], coefficients[2],
+                coefficients[3], coefficients[4], backend);
+            require(relative_error(scaled, expected * scale) <= 5.0e-10,
+                    "supplied coefficients were normalized or conjugated");
+            coefficients = original;
+            for (std::size_t node = 0; node < coefficients.size(); ++node) {
+                std::fill(coefficients[node].begin(), coefficients[node].end(),
+                          std::complex<double>{});
+                require(compute_coherent_amplitude(
+                            spins, 1, 1.2, coefficients[0], coefficients[1],
+                            coefficients[2], coefficients[3], coefficients[4],
+                            backend) == std::complex<double>{},
+                        "zero coefficient vector did not produce zero");
+                coefficients = original;
+            }
+        }
+        require(coefficients == original, "supplied coefficients were modified");
+    }
+
+    // Finite components may have an unrepresentable complex magnitude.
+    // Balance huge C1 against tiny C2 so the amplitude remains finite, and
+    // compare with the equivalent ordinary-scale full-tensor contraction.
+    const DSpins half_spins{{1,1,1,1,1,1,1,1,1,1}};
+    std::array<CoherentCoefficients, 5> balanced;
+    for (auto& node : balanced) node = {{1.0, 0.0}, {0.0, 0.0}};
+    balanced[0] = {{1.0, 1.0}, {1.0, 0.0}};
+    const auto tensor = compute_full_tensor(half_spins, 0, 0.0, Backend::CPU, {});
+    const auto balanced_expected = contract_coefficients(tensor, balanced);
+    const double maximum = std::numeric_limits<double>::max();
+    balanced[0] = {{maximum, maximum}, {maximum, 0.0}};
+    balanced[1][0] = {1.0 / maximum, 0.0};
+    config.coherent_amplitude.pruning_ratio =
+        default_config().coherent_amplitude.pruning_ratio;
+    configure(config);
+    for (const auto backend : {Backend::CPU, Backend::GPU}) {
+#if !SL2CFOAMXX_TEST_WITH_CUDA
+        if (backend == Backend::GPU) continue;
+#endif
+        const auto value = compute_coherent_amplitude(
+            half_spins, 0, 0.0, balanced[0], balanced[1], balanced[2],
+            balanced[3], balanced[4], backend, {});
+        // Reciprocal scaling introduces subnormal intermediates, so allow
+        // their rounding while still detecting the loss of the second lane.
+        require(relative_error(value, balanced_expected) <= 1.0e-8,
+                "overflowing coefficient magnitude corrupted relative pruning");
+    }
+    require(diagnostics.str().empty(),
+            "coefficient inputs triggered an inapplicable closure warning");
+    configure(initial);
+    std::cout << "supplied complex coefficients, scaling, zeros, and callbacks: PASS\n";
+}
+
 void check_tensor_and_errors(const sl2cfoamxx::LibraryConfig& initial)
 {
     using namespace sl2cfoamxx;
@@ -437,6 +568,43 @@ void check_tensor_and_errors(const sl2cfoamxx::LibraryConfig& initial)
         (void)compute_full_tensor(bad, 0, 1.2, Backend::CPU);
     }, "negative spin accepted");
     const DSpins valid_spins{{1,1,1,1,1,1,1,1,1,1}};
+    const auto valid_coefficients = boundary_coefficients(valid_spins, asymmetric_angles);
+    auto invalid_coefficients = valid_coefficients;
+    std::size_t invalid_progress_events = 0;
+    const auto invalid_callback = [&](const ProgressEvent&) { ++invalid_progress_events; };
+    const auto reject_coefficients = [&] {
+        require_throws<std::invalid_argument>([&] {
+            (void)compute_coherent_amplitude(
+                valid_spins, 0, 1.2, invalid_coefficients[0], invalid_coefficients[1],
+                invalid_coefficients[2], invalid_coefficients[3], invalid_coefficients[4]);
+        }, "invalid supplied coefficients accepted by default overload");
+        for (const auto backend : {Backend::CPU, Backend::GPU}) {
+            require_throws<std::invalid_argument>([&] {
+                (void)compute_coherent_amplitude(
+                    valid_spins, 0, 1.2, invalid_coefficients[0], invalid_coefficients[1],
+                    invalid_coefficients[2], invalid_coefficients[3], invalid_coefficients[4],
+                    backend, invalid_callback);
+            }, "invalid supplied coefficients accepted before backend dispatch");
+        }
+    };
+    for (std::size_t node = 0; node < invalid_coefficients.size(); ++node) {
+        for (const std::size_t length : {std::size_t{0}, std::size_t{1}, std::size_t{3}}) {
+            invalid_coefficients[node].resize(length);
+            reject_coefficients();
+            invalid_coefficients = valid_coefficients;
+        }
+        for (const double nonfinite : {std::numeric_limits<double>::infinity(),
+                                      -std::numeric_limits<double>::infinity(),
+                                      std::numeric_limits<double>::quiet_NaN()}) {
+            invalid_coefficients[node][0] = {nonfinite, 0.0};
+            reject_coefficients();
+            invalid_coefficients[node][0] = {0.0, nonfinite};
+            reject_coefficients();
+            invalid_coefficients = valid_coefficients;
+        }
+    }
+    require(invalid_progress_events == 0,
+            "invalid supplied coefficients started progress before validation");
     const DIntertwiners valid_intertwiners{{0,0,0,0,0}};
     for (const double gamma : {-1.2, -std::numeric_limits<double>::min()}) {
         require_throws<std::invalid_argument>([&] {
@@ -456,6 +624,12 @@ void check_tensor_and_errors(const sl2cfoamxx::LibraryConfig& initial)
                 (void)compute_coherent_amplitude(
                     valid_spins, 0, gamma, asymmetric_angles, backend, callback);
             }, "negative gamma accepted by coherent amplitude");
+            require_throws<std::invalid_argument>([&] {
+                (void)compute_coherent_amplitude(
+                    valid_spins, 0, gamma, valid_coefficients[0], valid_coefficients[1],
+                    valid_coefficients[2], valid_coefficients[3], valid_coefficients[4],
+                    backend, callback);
+            }, "negative gamma accepted by supplied coefficient amplitude");
             require(progress_events == 0,
                     "negative gamma started a computation before validation");
         }
@@ -499,6 +673,7 @@ int main() try
 
     check_tensor_and_errors(active);
     check_coherent_workflows(active);
+    check_supplied_coefficient_workflows(active);
 
     // A small complete public workflow; large benchmarks are external consumers.
     const std::array<int, 10> spins{{2,2,2,2,2,2,2,2,2,2}};

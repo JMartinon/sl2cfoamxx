@@ -85,7 +85,8 @@ template <std::size_t Size>
     const Spins& spins_array,
     std::size_t Dl,
     double gamma,
-    const BoundaryAngles& angles,
+    const BoundaryAngles* angles,
+    const std::array<const CoherentCoefficients*, 5>& supplied_coefficients,
     Backend backend,
     const LibraryConfig& config);
 
@@ -101,7 +102,7 @@ std::complex<double> compute_coherent_amplitude(
         spins_array, Dl, gamma, angles);
     const LibraryConfig config = detail::configuration_snapshot();
     return compute_coherent_amplitude_impl(
-        spins_array, Dl, gamma, angles, config.backend, config);
+        spins_array, Dl, gamma, &angles, {}, config.backend, config);
 }
 
 std::complex<double> compute_coherent_amplitude(
@@ -115,7 +116,7 @@ std::complex<double> compute_coherent_amplitude(
         spins_array, Dl, gamma, angles, backend);
     const LibraryConfig config = detail::configuration_snapshot();
     return compute_coherent_amplitude_impl(
-        spins_array, Dl, gamma, angles, backend, config);
+        spins_array, Dl, gamma, &angles, {}, backend, config);
 }
 
 std::complex<double> compute_coherent_amplitude(
@@ -131,7 +132,67 @@ std::complex<double> compute_coherent_amplitude(
     LibraryConfig config = detail::configuration_snapshot();
     config.progress_callback = std::move(progress_callback);
     return compute_coherent_amplitude_impl(
-        spins_array, Dl, gamma, angles, backend, config);
+        spins_array, Dl, gamma, &angles, {}, backend, config);
+}
+
+std::complex<double> compute_coherent_amplitude(
+    const DSpins& spins,
+    std::size_t Dl,
+    double gamma,
+    const CoherentCoefficients& C1,
+    const CoherentCoefficients& C2,
+    const CoherentCoefficients& C3,
+    const CoherentCoefficients& C4,
+    const CoherentCoefficients& C5)
+{
+    const std::array<const CoherentCoefficients*, 5> coefficients{
+        &C1, &C2, &C3, &C4, &C5};
+    detail::validate_coherent_amplitude_inputs(spins, Dl, gamma, coefficients);
+    const LibraryConfig config = detail::configuration_snapshot();
+    return compute_coherent_amplitude_impl(
+        spins, Dl, gamma, nullptr, coefficients, config.backend, config);
+}
+
+std::complex<double> compute_coherent_amplitude(
+    const DSpins& spins,
+    std::size_t Dl,
+    double gamma,
+    const CoherentCoefficients& C1,
+    const CoherentCoefficients& C2,
+    const CoherentCoefficients& C3,
+    const CoherentCoefficients& C4,
+    const CoherentCoefficients& C5,
+    Backend backend)
+{
+    const std::array<const CoherentCoefficients*, 5> coefficients{
+        &C1, &C2, &C3, &C4, &C5};
+    detail::validate_coherent_amplitude_inputs(
+        spins, Dl, gamma, coefficients, backend);
+    const LibraryConfig config = detail::configuration_snapshot();
+    return compute_coherent_amplitude_impl(
+        spins, Dl, gamma, nullptr, coefficients, backend, config);
+}
+
+std::complex<double> compute_coherent_amplitude(
+    const DSpins& spins,
+    std::size_t Dl,
+    double gamma,
+    const CoherentCoefficients& C1,
+    const CoherentCoefficients& C2,
+    const CoherentCoefficients& C3,
+    const CoherentCoefficients& C4,
+    const CoherentCoefficients& C5,
+    Backend backend,
+    ProgressCallback progress_callback)
+{
+    const std::array<const CoherentCoefficients*, 5> coefficients{
+        &C1, &C2, &C3, &C4, &C5};
+    detail::validate_coherent_amplitude_inputs(
+        spins, Dl, gamma, coefficients, backend);
+    LibraryConfig config = detail::configuration_snapshot();
+    config.progress_callback = std::move(progress_callback);
+    return compute_coherent_amplitude_impl(
+        spins, Dl, gamma, nullptr, coefficients, backend, config);
 }
 
 namespace {
@@ -140,7 +201,8 @@ std::complex<double> compute_coherent_amplitude_impl(
     const Spins& spins_array,
     std::size_t Dl,
     double gamma,
-    const BoundaryAngles& angles,
+    const BoundaryAngles* angles,
+    const std::array<const CoherentCoefficients*, 5>& supplied_coefficients,
     Backend backend,
     const LibraryConfig& config)
 {
@@ -185,16 +247,18 @@ std::complex<double> compute_coherent_amplitude_impl(
                         " coherent_gpu_pipeline_slots_request=",
                         config.low_level.coherent_gpu_pipeline_slots,
                         " closure_check=",
-                        config.coherent_amplitude.check_closure
-                            ? "enabled"
-                            : "disabled",
+                        angles == nullptr ? "not-applicable" :
+                            (config.coherent_amplitude.check_closure
+                                ? "enabled" : "disabled"),
+                        " coefficient_source=",
+                        angles == nullptr ? "caller" : "angles",
                         " pruning_ratio=", std::scientific,
                         std::setprecision(17),
                         config.coherent_amplitude.pruning_ratio);
 
-        if (config.coherent_amplitude.check_closure) {
+        if (angles != nullptr && config.coherent_amplitude.check_closure) {
             const ClosureCheckResult closure = check_closure(
-                spins_array, angles);
+                spins_array, *angles);
             if (!closure.all_closed) {
                 double maximum_residual = 0.0;
                 double maximum_relative_residual = 0.0;
@@ -269,14 +333,26 @@ std::complex<double> compute_coherent_amplitude_impl(
         const double support_seconds = seconds_since(support_start);
 
         std::array<double, 5> coefficient_seconds{};
+        const std::array<const std::vector<int>*, 5> intertwiner_labels{
+            &channels.i1, &channels.i2, &channels.i3, &channels.i4, &channels.i5};
         const auto compute_coefficients =
             [&](std::size_t index) {
                 const auto start = DiagnosticsClock::now();
-                coherent_intertwiner::Result result =
-                    detail::compute_coherent_coefficients_internal(
+                coherent_intertwiner::Result result{};
+                if (angles != nullptr) {
+                    result = detail::compute_coherent_coefficients_internal(
                         detail::coherent_node_spins(spins_array, index),
-                        detail::coherent_node_angles(angles, index),
+                        detail::coherent_node_angles(*angles, index),
                         config);
+                } else {
+                    result.doubled_iotas = *intertwiner_labels[index];
+                    result.coefficients.reserve(
+                        supplied_coefficients[index]->size());
+                    for (const auto value : *supplied_coefficients[index]) {
+                        result.coefficients.push_back(
+                            {value.real(), value.imag()});
+                    }
+                }
                 coefficient_seconds[index] = seconds_since(start);
                 return result;
             };

@@ -151,6 +151,15 @@ SJX_API SJXError* sjx_compute_amplitude(const int32_t* spins10,
 SJX_API SJXError* sjx_compute_coherent_amplitude(const int32_t* spins10,
     uint64_t Dl, double gamma, const double* angles40,
     const int32_t* backend, SJXProgressQueue*, SJXComplex* result) SJX_NOEXCEPT;
+/* Each coefficient vector is in ascending admissible intertwiner order for
+ * its node. Counts must match the corresponding tensor dimensions. Values
+ * are used without conjugation or normalization; the C++ API validates them. */
+SJX_API SJXError* sjx_compute_coherent_amplitude_coefficients(const int32_t* spins10,
+    uint64_t Dl, double gamma,
+    const SJXComplex* C1, uint64_t count1, const SJXComplex* C2, uint64_t count2,
+    const SJXComplex* C3, uint64_t count3, const SJXComplex* C4, uint64_t count4,
+    const SJXComplex* C5, uint64_t count5,
+    const int32_t* backend, SJXProgressQueue*, SJXComplex* result) SJX_NOEXCEPT;
 SJX_API SJXError* sjx_compute_full_tensor(const int32_t* spins10,
     uint64_t Dl, double gamma, const int32_t* backend,
     SJXProgressQueue*, SJXTensor** result) SJX_NOEXCEPT;

@@ -60,11 +60,8 @@ def nonnegative_integer(value):
     return number
 
 
-def show_einsum(tensor, spins, coherent_amplitude):
+def show_einsum(tensor, coefficients, coherent_amplitude):
     # FullTensor is accepted directly by NumPy; no .numpy() call is required.
-    coefficients = [sf.compute_coherent_coefficients(
-        [spins[i] for i in spin_indices], ANGLES[list(angle_rows)])
-        for spin_indices, angle_rows in zip(NODE_SPIN_INDICES, NODE_ANGLE_ROWS)]
     contracted = np.einsum("abcde,a,b,c,d,e->", tensor, *coefficients,
                            optimize=True)
     np.testing.assert_allclose(contracted, coherent_amplitude, rtol=5e-9, atol=5e-21)
@@ -137,9 +134,17 @@ def main():
         closure = sf.check_closure(spins, ANGLES)
         if not closure.all_closed:
             raise ValueError("Boundary normals do not close")
-        C1 = sf.compute_coherent_coefficients(spins[:4], ANGLES[:4])
+        # Generate vectors in each tensor axis's recoupling basis. These can
+        # also be replaced with your own finite complex vectors of the same sizes.
+        coefficients = [sf.compute_coherent_coefficients(
+            [spins[i] for i in spin_indices], ANGLES[list(angle_rows)])
+            for spin_indices, angle_rows in zip(NODE_SPIN_INDICES, NODE_ANGLE_ROWS)]
+        C1 = coefficients[0]
         coherent = sf.compute_coherent_amplitude(
             spins, args.Dl, 1.2, ANGLES, backend=backend, progress=events.append)
+        supplied = sf.compute_coherent_amplitude(
+            spins, args.Dl, 1.2, *coefficients, backend=backend, progress=events.append)
+        np.testing.assert_allclose(supplied, coherent, rtol=5e-9, atol=5e-21)
         if args.two_j == 1 and args.Dl == 2:
             # Independent Julia reference retained in test_coherent_public_api.cpp.
             expected = complex(-1.6748256353857123e-10, 1.2973143587300214e-10)
@@ -171,7 +176,7 @@ def main():
         print(f"NumPy dtype: {array.dtype}; first slice shape: {first_slice.shape}")
         print(f"Progress events: {len(events)}; mapped read-only: {mapped.is_read_only}")
         if args.einsum:
-            show_einsum(tensor, spins, coherent)
+            show_einsum(tensor, coefficients, coherent)
 
 
 if __name__ == "__main__":
