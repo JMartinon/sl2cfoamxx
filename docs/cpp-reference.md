@@ -113,6 +113,9 @@ gives zero. CPU/GPU selection, the simplicity constraint, C1 pruning, and
 progress callback replacement follow the angle overloads. No full tensor is
 materialized by this call. Closure checking is skipped even if enabled in
 the configuration, since arbitrary coefficients do not supply normals.
+Finiteness validation does not guarantee that every floating-point intermediate
+is representable; see the [numerical range note](scientific-conventions.md#supplied-boundary-coefficients)
+when supplying extreme coefficient scales.
 
 ### Closure and pruning
 

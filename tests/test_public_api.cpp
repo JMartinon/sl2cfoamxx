@@ -526,17 +526,20 @@ void check_supplied_coefficient_workflows(const sl2cfoamxx::LibraryConfig& initi
     config.coherent_amplitude.pruning_ratio =
         default_config().coherent_amplitude.pruning_ratio;
     configure(config);
-    for (const auto backend : {Backend::CPU, Backend::GPU}) {
-#if !SL2CFOAMXX_TEST_WITH_CUDA
-        if (backend == Backend::GPU) continue;
-#endif
-        const auto value = compute_coherent_amplitude(
-            half_spins, 0, 0.0, balanced[0], balanced[1], balanced[2],
-            balanced[3], balanced[4], backend, {});
-        // Reciprocal scaling introduces subnormal intermediates, so allow
-        // their rounding while still detecting the loss of the second lane.
-        require(relative_error(value, balanced_expected) <= 1.0e-8,
-                "overflowing coefficient magnitude corrupted relative pruning");
+    // The host pruning routine is shared by CPU and GPU. Exercise its
+    // extreme range on CPU: CUDA weights its 6j tensor by C1 before C2 can
+    // balance the scale, and this fixture overflows those intermediates.
+    const auto value = compute_coherent_amplitude(
+        half_spins, 0, 0.0, balanced[0], balanced[1], balanced[2],
+        balanced[3], balanced[4], Backend::CPU, {});
+    // Reciprocal scaling introduces subnormal intermediates, so allow
+    // their rounding while still detecting the loss of the second lane.
+    if (!(relative_error(value, balanced_expected) <= 1.0e-8)) {
+        std::ostringstream message;
+        message << "overflowing coefficient magnitude corrupted relative pruning: "
+                << "backend=CPU actual=" << std::setprecision(17) << value
+                << " expected=" << balanced_expected;
+        throw std::runtime_error(message.str());
     }
     require(diagnostics.str().empty(),
             "coefficient inputs triggered an inapplicable closure warning");

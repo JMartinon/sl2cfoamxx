@@ -80,3 +80,8 @@ normalized and need not come from coherent-state angles. Geometric closure
 checking is skipped for this overload. The configured C1 pruning ratio still
 applies; set `pruning_ratio=0` for the complete contraction. The language
 examples generate all five vectors in these bases and compare the two overloads.
+
+Finite inputs can still overflow or underflow double-precision intermediates.
+In particular, the GPU multiplies C1 by dimension-weighted 6j values before
+combining the other vectors, so coefficients near the floating-point limit
+can overflow even when their complete contraction would be finite.
