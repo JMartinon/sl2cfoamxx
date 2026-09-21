@@ -185,6 +185,36 @@ class PythonApiTest(unittest.TestCase):
                 gc.collect()
                 np.testing.assert_array_equal(coefficients, saved)
 
+    def test_boundary_angle_presets(self):
+        for name, spins in (("lorentzian", [10] * 4 + [4] * 6),
+                            ("euclidean", [1] * 10)):
+            with self.subTest(preset=name):
+                angles = getattr(foam, f"{name}_boundary_angles")
+                self.assertIs(angles, getattr(foam, f"{name}_bounday_angles"))
+                self.assertIsInstance(angles, tuple)
+                self.assertEqual(len(angles), 20)
+                for row in angles:
+                    self.assertIsInstance(row, tuple)
+                    self.assertEqual(len(row), 2)
+                    self.assertTrue(all(math.isfinite(value) for value in row))
+                with self.assertRaises(TypeError):
+                    angles[0] = (0.0, 0.0)
+                with self.assertRaises(TypeError):
+                    angles[0][0] = 0.0
+                self.assertTrue(foam.check_closure(spins, angles).all_closed)
+                mutable = np.array(angles, dtype=np.float64, copy=True)
+                first_theta = angles[0][0]
+                mutable[0, 0] += 0.25
+                self.assertEqual(angles[0][0], first_theta)
+
+        self.config.simplicity_constraint = foam.SimplicityConstraint.gamma_j_p1
+        foam.configure(self.config)
+        amplitude = foam.compute_coherent_amplitude(
+            [1] * 10, 2, 1.2, foam.euclidean_boundary_angles)
+        self.assertNumericallyEqual(
+            amplitude, complex(-1.6748256353857123e-10, 1.2973143587300214e-10),
+            rtol=5.0e-9)
+
     def test_coherent_amplitude_matches_canonical_numpy_contraction(self):
         coefficients = [foam.compute_coherent_coefficients(
             tuple(SPINS[i] for i in spin_indices), ANGLES[list(angle_rows)])

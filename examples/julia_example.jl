@@ -17,30 +17,9 @@ using SL2CfoamXX
 using LinearAlgebra
 const sf = SL2CfoamXX
 
-# Euclidean equilateral boundary, canonical oriented-normal order:
-# n12,n13,n14,n15,n21,n23,n24,n25,n31,n32,n34,n35,
-# n41,n42,n43,n45,n51,n52,n53,n54. Columns are theta,phi in radians.
-const ANGLES = [
-    0.000000000000000  0.000000000000000;
-    1.910633236249019  0.000000000000000;
-    1.910633236249019  2.094395102393196;
-    1.910633236249019 -2.094395102393196;
-    3.141592653589793  0.000000000000000;
-    1.230959417340775 -1.823476581936975;
-    1.230959417340775  0.270918520456220;
-    1.230959417340775  2.365313622849416;
-    1.230959417340775  3.141592653589793;
-    1.910633236249019  1.318116071652818;
-    2.411864997362827 -1.435337066566786;
-    0.729727656226966 -0.388139515370189;
-    1.230959417340775 -1.047197551196598;
-    1.910633236249019 -2.870674133133573;
-    0.729727656226966  1.706255587023007;
-    2.411864997362827  0.659058035826409;
-    1.230959417340775  1.047197551196598;
-    1.910633236249019 -0.776279030740378;
-    2.411864997362827  2.753453138219605;
-    0.729727656226966 -2.482534617763384]
+# Equilateral Euclidean preset: immutable (theta, phi) pairs in radians,
+# in the shared canonical oriented-normal order. Use it directly in calls.
+const ANGLES = sf.euclidean_boundary_angles
 
 # The coefficient vectors must use each node's tensor recoupling basis.
 # All positions here are Julia one-based indices, not physical spin labels.
@@ -120,7 +99,7 @@ function main(args)
         closure = sf.check_closure(spins,ANGLES)
         @assert closure.all_closed
         cs = [sf.compute_coherent_coefficients(
-            [spins[k] for k in NODE_SPINS[n]], ANGLES[collect(NODE_ROWS[n]),:]) for n in 1:5]
+            [spins[k] for k in NODE_SPINS[n]], [ANGLES[row] for row in NODE_ROWS[n]]) for n in 1:5]
         C1, C2, C3, C4, C5 = cs
         coherent = sf.compute_coherent_amplitude(spins,Dl,1.2,ANGLES; backend=backend,progress=report)
         # Supply any finite vectors in the same intertwiner bases. Scaling C1

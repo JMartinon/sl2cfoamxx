@@ -58,6 +58,7 @@ set(_sl2cfoamxx_julia_package_files
   src/SL2CfoamXX.jl
   src/enums.jl
   src/ffi.jl
+  src/boundary_angles.jl
   src/configuration.jl
   src/capabilities.jl
   src/tensor.jl

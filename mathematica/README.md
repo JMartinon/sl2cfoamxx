@@ -11,6 +11,13 @@ The user documentation lives with the other API guides:
 
 This directory contains the LibraryLink bridge and Wolfram package sources.
 
+Use `$LorentzianBoundaryAngles` or `$EuclideanBoundaryAngles` for the built-in
+20-by-2 angle presets in radians. They come from the public C++ constants and
+use canonical oriented-normal order. Assign a preset to your own variable
+before editing it. The Lorentzian preset closes for doubled spins
+`{10,10,10,10,4,4,4,4,4,4}` and common positive scalings; the Euclidean preset
+closes for equal spins. The guide includes examples and closure checks.
+
 Coherent amplitudes accept either twenty angle pairs or five caller-supplied
 coefficient vectors:
 

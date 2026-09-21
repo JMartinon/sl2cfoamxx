@@ -31,6 +31,23 @@ std::optional<std::filesystem::path> optional_path(const std::filesystem::path& 
     return path;
 }
 
+void bind_boundary_angle_presets(nb::module_& m)
+{
+    const auto as_tuple = [](const s::BoundaryAngles& angles) {
+        nb::list rows;
+        for (const auto& row : angles) {
+            rows.append(nb::make_tuple(row[0], row[1]));
+        }
+        return nb::tuple(rows);
+    };
+    m.attr("lorentzian_boundary_angles") =
+        as_tuple(s::lorentzian_boundary_angles);
+    m.attr("euclidean_boundary_angles") =
+        as_tuple(s::euclidean_boundary_angles);
+    m.attr("lorentzian_bounday_angles") = m.attr("lorentzian_boundary_angles");
+    m.attr("euclidean_bounday_angles") = m.attr("euclidean_boundary_angles");
+}
+
 // The Python argument owns the callable until the synchronous C++ call and
 // its reporter thread have finished. Copies of this callback contain no Python
 // references, so worker teardown never decrements a refcount without the GIL.
@@ -369,6 +386,7 @@ NB_MODULE(_sl2cfoamxx, m)
     bind_errors(m);
     bind_config(m);
     bind_inspection(m);
+    bind_boundary_angle_presets(m);
     bind_tensor(m);
     bind_computations(m);
     m.attr("__version__") = nb::cast(s::version());

@@ -34,6 +34,14 @@ All four APIs use the same scientific conventions:
 | `12..15` | `13..16` | `n41, n42, n43, n45` |
 | `16..19` | `17..20` | `n51, n52, n53, n54` |
 
+The APIs include fixed `lorentzian_boundary_angles` and
+`euclidean_boundary_angles` presets (`$LorentzianBoundaryAngles` and
+`$EuclideanBoundaryAngles` in Mathematica). They use these rows and radians.
+The Lorentzian data close for doubled spins `{10,10,10,10,4,4,4,4,4,4}`;
+the Euclidean data close for equal face spins. A preset supplies normals only:
+it does not select a different model or guarantee closure for arbitrary spins.
+Each API guide shows how to use a preset and make an editable copy.
+
 The public API checks nonnegative labels, parity, admissibility, supported
 cutoffs, and finite angles. Invalid scientific inputs raise
 `std::invalid_argument` in C++, `ValueError` in Python, and `ArgumentError` in Julia.

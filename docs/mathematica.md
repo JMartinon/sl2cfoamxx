@@ -115,8 +115,30 @@ device; it returns a failure otherwise. Query `BackendAvailableQ["GPU"]`,
 Supply twenty `{theta,phi}` pairs in the
 [canonical oriented-normal order](scientific-conventions.md). Normals at
 different nodes live in different local frames; the
-[complete example](../examples/mathematica_example.nb) provides a closed boundary
-and the coefficient permutations for all five recoupling bases.
+[complete example](../examples/mathematica_example.nb) uses the built-in Euclidean
+boundary preset and provides the coefficient permutations for all five
+recoupling bases.
+
+The library supplies two fixed angle presets, each a packed `20` by `2` real
+array in radians:
+
+```wl
+spins = ConstantArray[4, 10];
+angles = $EuclideanBoundaryAngles;
+CheckClosure[spins, angles]["AllClosed"]               (* True *)
+
+lorentzianSpins = {10,10,10,10,4,4,4,4,4,4};
+lorentzianAngles = $LorentzianBoundaryAngles;
+CheckClosure[lorentzianSpins, lorentzianAngles]["AllClosed"]  (* True *)
+```
+
+The Euclidean preset closes for equal boundary spins. The Lorentzian preset
+closes for the doubled-spin pattern above and common positive scalings of
+it. They are fixed boundary geometries, so closure is not guaranteed for
+arbitrary spins. Both use canonical oriented-normal order and come directly
+from the C++ library. Assign a preset to a variable, then edit your copy as
+needed; editing `angles` does not change the library preset. The alternate
+spellings `$LorentzianBoundayAngles` and `$EuclideanBoundayAngles` are aliases.
 
 ```wl
 closure = CheckClosure[spins, angles];
@@ -268,7 +290,7 @@ for the full error and callback-cleanup behavior.
 ## Run the complete example
 
 The [self-contained notebook](../examples/mathematica_example.nb) contains
-all geometry, configuration, calculations, numerical checks, persistence,
+the built-in Euclidean geometry, configuration, calculations, numerical checks, persistence,
 progress handling, and tensor contractions. Open it in Mathematica and
 evaluate its input cells in order with **Shift+Enter**. No companion script
 is required.

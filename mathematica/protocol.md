@@ -42,6 +42,7 @@ different native binary requires a fresh kernel.
 | 5 | backend available | [backend] | [] | | boolean |
 | 6 | CUDA count | [] | [] | | integer |
 | 7 | CUDA device info | [ordinal] | [] | | native snake_case fields |
+| 8 | boundary-angle preset | [preset] | [] | | 20 lists of [theta,phi]; 0=Lorentzian, 1=Euclidean |
 | 10 | fixed amplitude | [Dl,cache_policy,spins10,intertwiners5] | [gamma] | | real |
 | 11 | coherent amplitude | [Dl,backend,spins10] | [gamma,angles40] | | complex pair |
 | 12 | full tensor | [destination,Dl,backend,spins10] | [gamma] | | tensor metadata |
@@ -82,6 +83,10 @@ The five lengths count complex entries, and the real array has exactly
 the native API checks the finite entries and canonical intertwiner dimensions.
 Jobs own all five copied vectors. Contraction does not conjugate or normalize
 the entries, uses configured C1 pruning, and skips angle-based closure checks.
+
+Preset angles come from the public C++ `lorentzian_boundary_angles` and
+`euclidean_boundary_angles` constants. The package exposes their copied values
+as `$LorentzianBoundaryAngles` and `$EuclideanBoundaryAngles` packed real arrays.
 
 Angles are interleaved theta,phi in the public native node order. Configuration
 integer order is: backend, progress_bar, simplicity_constraint, verbosity,

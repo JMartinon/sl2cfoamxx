@@ -7,9 +7,26 @@ The [Mathematica guide](mathematica.md) covers installation, first calculations,
 and ordinary tensor algebra. This reference lists complete configuration
 keys, tensor operations, and integration contracts.
 
-[Coherent inputs](#coherent-inputs) · [Configuration](#configuration-defaults) · [Tensor functions](#tensor-functions) ·
+[Boundary presets](#boundary-presets) · [Coherent inputs](#coherent-inputs) · [Configuration](#configuration-defaults) · [Tensor functions](#tensor-functions) ·
 [Build settings](#build-and-loading-settings) · [Callbacks](#callback-contract) ·
 [Errors](#error-details) · [Validation](#validation)
+
+## Boundary presets
+
+| Symbol | Geometry and closure-compatible doubled spins |
+| --- | --- |
+| `$LorentzianBoundaryAngles` | Fixed Lorentzian boundary; `{10,10,10,10,4,4,4,4,4,4}` and common positive scalings. |
+| `$EuclideanBoundaryAngles` | Fixed Euclidean boundary; equal spins such as `ConstantArray[4,10]`. |
+
+These values are packed machine-real arrays with shape `{20,2}` containing
+`{theta,phi}` rows in radians, in the canonical oriented-normal order of
+`ComputeCoherentAmplitude` and `CheckClosure`. They are read lazily through
+the native bridge from the public C++ constants, so they require a loadable
+bridge. Assign a value to a variable before editing: `angles =
+$EuclideanBoundaryAngles; angles[[1,1]] = .2` changes only your copy. The
+symbols `$LorentzianBoundayAngles` and `$EuclideanBoundayAngles` provide spelling
+aliases. They supply fixed example data, do not generate angles for arbitrary
+spins, and do not change the configured backend or simplicity convention.
 
 ## Coherent inputs
 
@@ -215,7 +232,8 @@ Enable `BUILD_TESTING=ON` and, if discovery fails, set
 ctest --test-dir build-mathematica -L mathematica --output-on-failure
 ```
 
-The workflow covers independent coefficient references, supplied coefficient
+The workflow covers boundary-preset ordering, copy isolation, closure and
+amplitude references, independent coefficient references, supplied coefficient
 vectors and their validation, nonconjugating contractions, fixed/coherent/tensor
 agreement, both simplicity conventions, asymmetric inputs, dense and compact
 storage, mappings, conversions, array ownership, errors, and callback cleanup.

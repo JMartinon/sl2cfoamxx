@@ -129,7 +129,21 @@ tensor, read `tensor.at(indices)` directly.
 
 ## Coherent boundaries
 
-Fill all twenty rows of `BoundaryAngles` using the
+The public include provides both reference geometries as `inline constexpr`
+`BoundaryAngles` values:
+
+```cpp
+auto lorentzian = sl2cfoamxx::lorentzian_boundary_angles;
+auto euclidean = sl2cfoamxx::euclidean_boundary_angles;
+```
+
+These make editable copies of the presets. The spellings
+`lorentzian_bounday_angles` and `euclidean_bounday_angles` are also available
+as aliases. The Lorentzian preset closes for doubled spins
+`{10,10,10,10,4,4,4,4,4,4}`; the Euclidean preset closes for equal face spins.
+See [boundary presets](cpp-reference.md#boundary-presets) for a complete call.
+
+For a custom boundary, fill all twenty rows of `BoundaryAngles` using the
 [canonical normal order](scientific-conventions.md), then call:
 
 ```cpp

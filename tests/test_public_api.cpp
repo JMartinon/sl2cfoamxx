@@ -430,7 +430,18 @@ void check_coherent_workflows(const sl2cfoamxx::LibraryConfig& initial)
                     8.549823132047453e-8) <= 1.0e-5,
                 "independent mixed-parity tensor reference mismatch");
     }
-    require(check_closure(half, euclidean_angles).all_closed,
+    static_assert(lorentzian_bounday_angles == lorentzian_boundary_angles);
+    static_assert(euclidean_bounday_angles == euclidean_boundary_angles);
+    require(euclidean_boundary_angles == euclidean_angles,
+            "Euclidean preset differs from retained boundary data");
+    auto editable_angles = lorentzian_bounday_angles;
+    editable_angles[0][0] = 0.0;
+    require(lorentzian_boundary_angles[0][0] == 1.570796326794897,
+            "editing a preset copy changed the public constant");
+    const DSpins lorentzian_spins{{10,10,10,10,4,4,4,4,4,4}};
+    require(check_closure(lorentzian_spins, lorentzian_boundary_angles).all_closed,
+            "Lorentzian preset failed closure with matching spins");
+    require(check_closure(half, euclidean_boundary_angles).all_closed,
             "known closed boundary failed closure");
     configure(initial);
     std::cout << "coherent contraction, references, closure, and progress: PASS\n";

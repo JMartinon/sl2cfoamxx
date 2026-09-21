@@ -125,6 +125,30 @@ the coefficient function takes four labels and four pairs. Noncontiguous
 matrix views are accepted. Node recoupling permutations are demonstrated in
 the example; using the wrong node order changes the physical contraction.
 
+The built-in `sf.lorentzian_boundary_angles` and `sf.euclidean_boundary_angles`
+presets are immutable tuples of twenty `(theta, phi)` tuples. They use radians
+and the same canonical row order as ordinary angle inputs. Their values come
+from the native C++ presets when the package is loaded, so they work with
+precompiled and relocated installations. Pass them directly:
+
+```julia
+angles = sf.euclidean_boundary_angles
+preset_spins = fill(1, 10)
+@assert sf.check_closure(preset_spins, angles).all_closed
+preset_amplitude = sf.compute_coherent_amplitude(preset_spins, 2, 1.2, angles)
+
+lorentzian_spins = (10,10,10,10,4,4,4,4,4,4)
+@assert sf.check_closure(lorentzian_spins, sf.lorentzian_boundary_angles).all_closed
+
+# Create a mutable 20 × 2 copy if you want to adjust the directions.
+editable_angles = [angles[row][column] for row in 1:20, column in 1:2]
+```
+
+The Euclidean preset closes for equal spins; the Lorentzian preset closes for
+the doubled-spin proportions shown above. These presets do not change the
+spin or angle conventions. The spellings `lorentzian_bounday_angles` and
+`euclidean_bounday_angles` are aliases for the same tuples.
+
 To supply the boundary coefficients directly, pass five vectors (or tuples)
 of real or complex numbers. Each is copied to `Vector{ComplexF64}`, including
 noncontiguous views. Its length must equal the corresponding tensor axis;
@@ -275,7 +299,8 @@ Build with `BUILD_TESTING=ON` and `SL2CFOAMXX_BUILD_JULIA=ON`, then:
 ctest --test-dir build-julia -L julia --output-on-failure
 ```
 
-CPU tests check independent coefficient references, fixed/tensor/coherent
+CPU tests check preset values, aliases, closure, a preset amplitude reference,
+independent coefficient references, fixed/tensor/coherent
 agreement, arbitrary complex coefficient contractions, zero and basis vectors,
 both simplicity conventions, unequal spins, lifted shells, array ownership,
 storage, invalid inputs, callback failures, and native progress.

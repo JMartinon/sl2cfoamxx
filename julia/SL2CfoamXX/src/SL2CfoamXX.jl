@@ -14,6 +14,7 @@ using Libdl
 
 include("enums.jl")
 include("ffi.jl")
+include("boundary_angles.jl")
 include("configuration.jl")
 include("capabilities.jl")
 include("tensor.jl")
@@ -29,6 +30,8 @@ export Backend, TensorStorage, SimplicityConstraint, AmplitudeCachePolicy,
        cuda_device_count, cuda_device_info,
        ProgressOperation, ProgressPhase, ProgressStatus, ProgressEvent,
        ClosureNodeResult, ClosureCheckResult, check_closure,
+       lorentzian_boundary_angles, euclidean_boundary_angles,
+       lorentzian_bounday_angles, euclidean_bounday_angles,
        indices_from_intertwiners, compute_amplitude, compute_coherent_amplitude,
        compute_full_tensor, compute_coherent_coefficients,
        FullTensor, FullTensorScientificMetadata, FullTensorMetadata, FullTensorPrintOptions,

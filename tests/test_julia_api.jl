@@ -83,6 +83,40 @@ mktempdir() do directory
             [sum(matrix[i,k] * matrix[j,k] for k in 1:20) for i in 1:20, j in 1:20]
     end
 
+    @testset "Native boundary angle presets" begin
+        lorentzian = sf.lorentzian_boundary_angles
+        euclidean = sf.euclidean_boundary_angles
+        @test lorentzian isa NTuple{20,NTuple{2,Float64}}
+        @test euclidean isa NTuple{20,NTuple{2,Float64}}
+        @test lorentzian === sf.lorentzian_bounday_angles
+        @test euclidean === sf.euclidean_bounday_angles
+        @test lorentzian_boundary_angles === lorentzian
+        @test euclidean_boundary_angles === euclidean
+        @test lorentzian[1] == (1.570796326794897, 0.0)
+        @test lorentzian[20] == (1.940427401462255, -2.186276035465284)
+        @test euclidean[1] == (0.0, 0.0)
+        @test euclidean[20] == (0.729727656226966, -2.482534617763384)
+        @test all(isfinite, Iterators.flatten(lorentzian))
+        @test all(isfinite, Iterators.flatten(euclidean))
+        @test sf.check_closure((10,10,10,10,4,4,4,4,4,4), lorentzian).all_closed
+        @test sf.check_closure(fill(1,10), euclidean).all_closed
+        @test_throws MethodError setindex!(euclidean, (0.0, 0.0), 2)
+        # Editing an explicit matrix copy cannot alter the shared tuple.
+        editable = [euclidean[row][column] for row in 1:20, column in 1:2]
+        editable[2,1] = 0.0
+        @test sf.euclidean_boundary_angles[2][1] == 1.910633236249019
+        reference_config = sf.current_config()
+        reference_config.simplicity_constraint = sf.SimplicityConstraint.gamma_j_p1
+        sf.configure(reference_config)
+        try
+            actual = sf.compute_coherent_amplitude(fill(1,10), 2, 1.2, euclidean; backend=BACKEND)
+            @test isapprox(actual, -1.6748256353857123e-10 + 1.2973143587300214e-10im;
+                           rtol=5e-9, atol=5e-21)
+        finally
+            sf.configure(config)
+        end
+    end
+
     @testset "Independent coefficient and closure oracles" begin
         cs = coefficients(SPINS)
         @test cs[2] ≈ [0.1282584174511503 + 0.1343652056345688im,

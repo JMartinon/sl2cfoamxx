@@ -89,7 +89,32 @@ WithCleanup[Null,
     assert["default association", AssociationQ[defaults]];
     If[!AssociationQ[defaults], Print[defaults]; Exit[1]];
     assert["native version", LibraryVersion[] === BuildInfo[]["Version"]];
-    assert["version value", LibraryVersion[] === "1.0.1"];
+    assert["version value", LibraryVersion[] === "1.0.2"];
+    lorentzian = $LorentzianBoundaryAngles;
+    euclidean = $EuclideanBoundaryAngles;
+    lorentzianSpins = {10,10,10,10,4,4,4,4,4,4};
+    assert["preset shapes", Dimensions[lorentzian] === {20,2} && Dimensions[euclidean] === {20,2}];
+    assert["packed real presets", Developer`PackedArrayQ[lorentzian] && Developer`PackedArrayQ[euclidean] &&
+        MatrixQ[lorentzian,Head[#] === Real &] && MatrixQ[euclidean,Head[#] === Real &]];
+    assert["Lorentzian preset row order", lorentzian[[{1,8,12,16,20}]] === {
+        {1.570796326794897,0.000000000000000},
+        {2.069985204145935,-0.320246032512208},
+        {2.069985204145935,2.230879268761226},
+        {1.201165252127538,-2.186276035465284},
+        {1.940427401462255,-2.186276035465284}}];
+    assert["Euclidean preset row order", euclidean[[{1,8,12,16,20}]] === {
+        {0.000000000000000,0.000000000000000},
+        {1.230959417340775,2.365313622849416},
+        {0.729727656226966,-0.388139515370189},
+        {2.411864997362827,0.659058035826409},
+        {0.729727656226966,-2.482534617763384}}];
+    assert["preset spelling aliases", $LorentzianBoundayAngles === lorentzian && $EuclideanBoundayAngles === euclidean];
+    modifiedPreset = euclidean; modifiedPreset[[1,1]] = -1.;
+    assert["preset copy isolation", euclidean[[1,1]] === 0. && $EuclideanBoundaryAngles === euclidean];
+    assert["Lorentzian preset closure", CheckClosure[lorentzianSpins,lorentzian]["AllClosed"]];
+    assert["scaled Lorentzian preset closure", CheckClosure[2 lorentzianSpins,lorentzian]["AllClosed"]];
+    assert["Euclidean preset closure", CheckClosure[ConstantArray[4,10],euclidean]["AllClosed"]];
+    assert["presets require matching spin geometry", !CheckClosure[ConstantArray[4,10],lorentzian]["AllClosed"]];
     assert["native compiler", StringQ[BuildInfo[]["CompilerID"]]];
     assert["CPU available", BackendAvailableQ["CPU"]];
     assert["pattern enum rejected", FailureQ[BackendAvailableQ[_]]];
@@ -108,6 +133,12 @@ WithCleanup[Null,
         "Storage" -> "in_memory_dense", "ReuseExisting" -> False|>];
     config["CoherentAmplitude"] = Join[config["CoherentAmplitude"], <|"PruningRatio" -> 0.|>];
     assert["configure", !FailureQ[Configure[config]]];
+    presetConfig = config; presetConfig["SimplicityConstraint"] = "gamma_j_p1";
+    Configure[presetConfig];
+    assert["Lorentzian preset amplitude reference", close[
+        ComputeCoherentAmplitude[lorentzianSpins,2,1.2,lorentzian,"Backend" -> backend],
+        -1.2613917379855847*^-17 - 1.039173505859162*^-16 I,5.*^-9]];
+    Configure[config];
     snapshot = CurrentConfig[];
     snapshot["LowLevel"] = Join[snapshot["LowLevel"], <|"BoosterRhoTile" -> 8,
         "FullTensorCPUPBatch" -> 128, "FullTensorCPUFinalTile" -> "tile_4x8"|>];
@@ -299,6 +330,7 @@ WithCleanup[Null,
        environment above takes precedence over NotebookDirectory in a kernel. *)
     If[AllTrue[notebookSetup,MatchQ[#,_HoldComplete] &],
         Scan[ReleaseHold,notebookSetup];
+        assert["notebook uses Euclidean preset", $SL2CfoamXXExampleAngles === euclidean];
         notebookResult = RunSL2CfoamXXExample[backend];
         assert["self-contained notebook workflow", AssociationQ[notebookResult]];
         If[AssociationQ[notebookResult],

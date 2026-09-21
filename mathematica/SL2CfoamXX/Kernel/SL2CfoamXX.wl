@@ -13,6 +13,10 @@ BuildInfo::usage = "BuildInfo[] returns compiler, BLAS, CUDA, and other native b
 BackendAvailableQ::usage = "BackendAvailableQ[\"CPU\"|\"GPU\"] tests native backend availability without selecting a fallback.";
 CUDADeviceCount::usage = "CUDADeviceCount[] returns the number of visible CUDA devices; zero for CPU-only builds.";
 CUDADeviceInfo::usage = "CUDADeviceInfo[ordinal] returns native device information. CUDA ordinals are zero-based.";
+$LorentzianBoundaryAngles::usage = "$LorentzianBoundaryAngles gives the library's Lorentzian preset as a packed 20 by 2 real array of {theta,phi} pairs in radians, in canonical oriented-normal order. It closes for doubled spins {10,10,10,10,4,4,4,4,4,4} and common positive scalings. Assign it to a variable before editing.";
+$EuclideanBoundaryAngles::usage = "$EuclideanBoundaryAngles gives the library's Euclidean preset as a packed 20 by 2 real array of {theta,phi} pairs in radians, in canonical oriented-normal order. It closes for equal boundary spins. Assign it to a variable before editing.";
+$LorentzianBoundayAngles::usage = "$LorentzianBoundayAngles is a spelling alias of $LorentzianBoundaryAngles.";
+$EuclideanBoundayAngles::usage = "$EuclideanBoundayAngles is a spelling alias of $EuclideanBoundaryAngles.";
 ComputeAmplitude::usage = "ComputeAmplitude[spins, intertwiners, Dl, gamma, \"CachePolicy\" -> \"disabled\"] computes one real fixed-intertwiner amplitude on CPU. Spin labels are doubled integers.";
 ComputeCoherentAmplitude::usage = "ComputeCoherentAmplitude[spins, Dl, gamma, angles, options] computes a complex CPU/GPU coherent amplitude from 20 {theta,phi} pairs. ComputeCoherentAmplitude[spins, Dl, gamma, C1, C2, C3, C4, C5, options] contracts caller-supplied finite complex vectors in canonical intertwiner order, without conjugation or normalization. Options are \"Backend\" -> Automatic and \"ProgressFunction\" -> None.";
 ComputeFullTensor::usage = "ComputeFullTensor[spins, Dl, gamma, \"Backend\" -> Automatic, \"ProgressFunction\" -> None, \"ReturnType\" -> \"Tensor\"] returns a managed FullTensorObject; ReturnType -> \"Array\" returns an independent canonical packed array.";
@@ -239,6 +243,11 @@ BackendAvailableQ[backend_] := api[callNative[5, {enumIndex[backend, $backends, 
 CUDADeviceCount[] := callNative[6];
 CUDADeviceInfo[ordinal_ : 0] := api[renameFields[checked[callNative[7,
   {nonnegativeInteger[ordinal, "CUDA device ordinal"]}]], $deviceNames]];
+
+$LorentzianBoundaryAngles := api[Developer`ToPackedArray[checked[callNative[8, {0}]], Real]];
+$EuclideanBoundaryAngles := api[Developer`ToPackedArray[checked[callNative[8, {1}]], Real]];
+$LorentzianBoundayAngles := $LorentzianBoundaryAngles;
+$EuclideanBoundayAngles := $EuclideanBoundaryAngles;
 
 anglesVector[angles_, rows_Integer] := (
   require[MatrixQ[angles] && Dimensions[angles] === {rows, 2},

@@ -517,6 +517,18 @@ void dispatch(Json& json, WolframLibraryData library, mint opcode, const Argumen
 #undef SFX_DEVICE_INT
         json.raw("}"); break;
     }
+    case 8: {
+        args.sizes(1,0);
+        const auto& angles = enumeration<int>(i[0],1) == 0
+            ? s::lorentzian_boundary_angles : s::euclidean_boundary_angles;
+        json.raw("[");
+        for (std::size_t n=0;n<angles.size();++n) {
+            if(n) json.raw(",");
+            json.raw("["); json.number(angles[n][0]);
+            json.raw(","); json.number(angles[n][1]); json.raw("]");
+        }
+        json.raw("]"); break;
+    }
     case 10:
         args.sizes(17,1); json.number(s::compute_amplitude(args.spins<10>(2), args.spins<5>(12),
             nonnegative<std::size_t>(i[0]), r[0], enumeration<s::AmplitudeCachePolicy>(i[1],1))); break;

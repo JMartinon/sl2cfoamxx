@@ -39,6 +39,62 @@ using TetrahedronAngles = std::array<NormalAngles, 4>;
 // n_ba because they belong to the local frames of different tetrahedra.
 using BoundaryAngles = std::array<NormalAngles, 20>;
 
+// Reference boundary geometries in radians and canonical oriented-normal order.
+// These fixed angle sets do not select a model or a backend. The Euclidean
+// boundary closes for equal face spins; the Lorentzian boundary closes for
+// face-spin ratios (5,5,5,5,2,2,2,2,2,2). Copy a preset to modify its angles.
+inline constexpr BoundaryAngles lorentzian_boundary_angles{{
+    {{1.570796326794897,  0.000000000000000}}, // n12
+    {{1.570796326794897,  1.910633236249019}}, // n13
+    {{0.615479708670387, -2.186276035465284}}, // n14
+    {{2.526112944919406, -2.186276035465284}}, // n15
+    {{1.570796326794897,  3.141592653589793}}, // n21
+    {{1.570796326794897,  0.585685543457151}}, // n23
+    {{1.071607449443858, -0.320246032512208}}, // n24
+    {{2.069985204145935, -0.320246032512208}}, // n25
+    {{1.570796326794897, -1.230959417340775}}, // n31
+    {{1.570796326794897,  1.324947692791868}}, // n32
+    {{1.071607449443858,  2.230879268761226}}, // n34
+    {{2.069985204145935,  2.230879268761226}}, // n35
+    {{2.526112944919406,  0.955316618124509}}, // n41
+    {{0.573540745391100, -1.105670539592056}}, // n42
+    {{0.573540745391100,  3.016303775841075}}, // n43
+    {{1.201165252127538, -2.186276035465284}}, // n45
+    {{0.615479708670387,  0.955316618124509}}, // n51
+    {{2.568051908198693, -1.105670539592056}}, // n52
+    {{2.568051908198693,  3.016303775841075}}, // n53
+    {{1.940427401462255, -2.186276035465284}}, // n54
+}};
+
+inline constexpr BoundaryAngles euclidean_boundary_angles{{
+    {{0.000000000000000,  0.000000000000000}}, // n12
+    {{1.910633236249019,  0.000000000000000}}, // n13
+    {{1.910633236249019,  2.094395102393196}}, // n14
+    {{1.910633236249019, -2.094395102393196}}, // n15
+    {{3.141592653589793,  0.000000000000000}}, // n21
+    {{1.230959417340775, -1.823476581936975}}, // n23
+    {{1.230959417340775,  0.270918520456220}}, // n24
+    {{1.230959417340775,  2.365313622849416}}, // n25
+    {{1.230959417340775,  3.141592653589793}}, // n31
+    {{1.910633236249019,  1.318116071652818}}, // n32
+    {{2.411864997362827, -1.435337066566786}}, // n34
+    {{0.729727656226966, -0.388139515370189}}, // n35
+    {{1.230959417340775, -1.047197551196598}}, // n41
+    {{1.910633236249019, -2.870674133133573}}, // n42
+    {{0.729727656226966,  1.706255587023007}}, // n43
+    {{2.411864997362827,  0.659058035826409}}, // n45
+    {{1.230959417340775,  1.047197551196598}}, // n51
+    {{1.910633236249019, -0.776279030740378}}, // n52
+    {{2.411864997362827,  2.753453138219605}}, // n53
+    {{0.729727656226966, -2.482534617763384}}, // n54
+}};
+
+// Alternate spellings for the same immutable presets.
+inline constexpr const BoundaryAngles& lorentzian_bounday_angles =
+    lorentzian_boundary_angles;
+inline constexpr const BoundaryAngles& euclidean_bounday_angles =
+    euclidean_boundary_angles;
+
 // Coefficients are ordered by ascending admissible doubled intertwiner,
 // starting at max(|J1-J2|,|J3-J4|) (adjusted for parity), ending at
 // min(J1+J2,J3+J4), and advancing in steps of two.

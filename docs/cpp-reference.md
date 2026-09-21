@@ -53,6 +53,31 @@ const auto amplitude = sl2cfoamxx::compute_coherent_amplitude(
     spins, Dl, gamma, angles);
 ```
 
+### Boundary presets
+
+Both reference geometries are included by `<sl2cfoamxx.hpp>` (or
+`<sl2cfoamxx/sl2cfoamxx.hpp>`). They use the exact angle values in the
+[coherent boundary example](../examples/coherent_boundary_example.cpp), in
+radians and the canonical row order above:
+
+```cpp
+const sl2cfoamxx::DSpins spins{10,10,10,10,4,4,4,4,4,4};
+auto angles = sl2cfoamxx::lorentzian_boundary_angles;
+const auto amplitude = sl2cfoamxx::compute_coherent_amplitude(
+    spins, 2, 1.2, angles);
+
+auto other_angles = sl2cfoamxx::euclidean_boundary_angles;
+other_angles[0][0] = 0.1; // Only this copy changes.
+```
+
+The constants are `inline constexpr BoundaryAngles`; copying them requires
+no library initialization. `lorentzian_bounday_angles` and
+`euclidean_bounday_angles` are aliases for the same immutable values.
+The Lorentzian geometry closes for face-spin ratios `(5,5,5,5,2,2,2,2,2,2)`;
+the Euclidean geometry closes for equal face spins. They are fixed boundary
+data, so choosing a preset does not change the model, backend, or configuration.
+Use `check_closure` with your chosen spins as usual.
+
 ### One-tetrahedron coefficients
 
 The same one-tetrahedron convention is public. Entries of `node_spins` and

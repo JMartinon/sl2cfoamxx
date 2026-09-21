@@ -444,6 +444,20 @@ SJXError* sjx_progress_poll(SJXProgressQueue* queue, SJXProgressEvent* output,
 }
 void sjx_progress_free(SJXProgressQueue* queue) noexcept { delete queue; }
 
+SJXError* sjx_boundary_angles(int32_t preset, double* output) noexcept
+{
+    return protect([&] {
+        checked(output);
+        if (preset != 0 && preset != 1)
+            throw std::invalid_argument("unknown boundary angle preset");
+        const auto& values = preset == 0 ? s::lorentzian_boundary_angles
+                                         : s::euclidean_boundary_angles;
+        for (std::size_t row = 0; row < values.size(); ++row) {
+            output[2 * row] = values[row][0];
+            output[2 * row + 1] = values[row][1];
+        }
+    });
+}
 SJXError* sjx_indices_from_intertwiners(const int32_t* boundary,
     const int32_t* intertwiners, uint64_t* output) noexcept
 {

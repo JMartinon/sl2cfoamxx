@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.22)
 include(cmake/SelectMacOSGNU.cmake)
 
 project(sl2cfoamxx
-  VERSION 1.0.1
+  VERSION 1.0.2
   DESCRIPTION "High-performance sl2cfoam++ vertex amplitudes and tensors"
   LANGUAGES CXX
 )

@@ -41,6 +41,13 @@ $e^{i\alpha}z$ multiplies its spin-$j$ coherent state by $e^{2ij\alpha}$.
 The coefficient construction inserts no antipodal map or complex conjugation
 of the supplied spinors.
 
+The public APIs provide the fixed `lorentzian_boundary_angles` and
+`euclidean_boundary_angles` reference data in this convention. The Lorentzian
+preset closes for face-spin ratios `(5,5,5,5,2,2,2,2,2,2)`, while the Euclidean
+preset closes for equal face spins. Both contain twenty ordered pairs in
+radians; selecting a preset supplies boundary normals without changing the
+Lorentzian EPRL model evaluated by the library.
+
 For each ordered quadruple, the intertwiner basis couples the first two
 legs and the last two legs. The five local orders are:
 

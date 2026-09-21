@@ -11,7 +11,7 @@ const _symbol_names = (
     :sjx_config_dispose, :sjx_build_info, :sjx_build_info_dispose,
     :sjx_backend_available, :sjx_cuda_device_count, :sjx_cuda_device_info,
     :sjx_device_info_dispose, :sjx_progress_create, :sjx_progress_poll,
-    :sjx_progress_free, :sjx_indices_from_intertwiners, :sjx_compute_amplitude,
+    :sjx_progress_free, :sjx_boundary_angles, :sjx_indices_from_intertwiners, :sjx_compute_amplitude,
     :sjx_compute_coherent_amplitude, :sjx_compute_coherent_amplitude_coefficients,
     :sjx_compute_full_tensor,
     :sjx_compute_coherent_coefficients, :sjx_check_closure, :sjx_tensor_create,
@@ -50,6 +50,7 @@ function __init__()
         _mkl_dependency_handle[] = Libdl.dlopen(abspath(library),
                                                Libdl.RTLD_NOLOAD | Libdl.RTLD_GLOBAL)
     end
+    _initialize_boundary_angles!()
 end
 
 """An operational failure from the native library, with a stable `code`."""

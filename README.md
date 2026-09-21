@@ -7,7 +7,7 @@
 
 # sl2cfoam++
 
-[![Regression](https://github.com/JMartinon/sl2cfoamxx/actions/workflows/regression.yml/badge.svg?branch=main&event=push)](https://github.com/JMartinon/sl2cfoamxx/actions/workflows/regression.yml)
+[![Regression](https://img.shields.io/github/actions/workflow/status/JMartinon/sl2cfoamxx/regression.yml?branch=main&event=push&label=Regression)](https://github.com/JMartinon/sl2cfoamxx/actions/workflows/regression.yml)
 [![GPU regression](https://img.shields.io/github/checks-status/JMartinon/sl2cfoamxx/main?label=GPU%20regression)](https://github.com/JMartinon/sl2cfoamxx/actions/workflows/gpu-regression.yml)
 [![Documentation](https://img.shields.io/badge/docs-theory_and_algorithms-blue)](https://jmartinon.github.io/sl2cfoamxx/)
 [![License: GPL v3 or later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
@@ -32,7 +32,8 @@ Compute individual amplitudes or full vertex tensors from C++, Python, Julia, or
   files shared across languages.
 - Native NumPy/einsum, Julia array, and Mathematica tensor operations.
 - Coherent-state coefficients, caller-supplied complex boundary vectors,
-  closure checks, and CPU/GPU progress reporting.
+  built-in Lorentzian and Euclidean boundary angles, closure checks, and
+  CPU/GPU progress reporting.
 - Seed-free Wigner recurrences, with no external Wigner library or symbol tables.
 
 Public spins and intertwiners are **doubled integers**: `1` represents physical

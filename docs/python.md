@@ -183,6 +183,28 @@ or `""` to `config.tensors.output_path`.
 relative_tolerance=1e-12)` returns five node reports and `all_closed`; it also
 supports `bool(result)`.
 
+Two ready-to-use angle presets are available as immutable tuples of twenty
+`(theta, phi)` tuples: `sf.euclidean_boundary_angles` and
+`sf.lorentzian_boundary_angles`. They use the same canonical order and radians
+as the angle-taking APIs, so you can pass them directly:
+
+```python
+euclidean = sf.compute_coherent_amplitude(
+    [1] * 10, 2, 1.2, sf.euclidean_boundary_angles)
+lorentzian_spins = [10] * 4 + [4] * 6
+assert sf.check_closure(lorentzian_spins, sf.lorentzian_boundary_angles).all_closed
+
+# Make a separate mutable NumPy array for editing or selecting rows.
+import numpy as np
+angles = np.array(sf.euclidean_boundary_angles, dtype=np.float64, copy=True)
+```
+
+The Euclidean preset closes for equal spins; the Lorentzian preset matches
+the doubled-spin pattern `[10,10,10,10,4,4,4,4,4,4]` and its uniform rescalings.
+The constants contain only angles and do not select spins, `gamma`, or the
+simplicity constraint. The alternate spellings `euclidean_bounday_angles` and
+`lorentzian_bounday_angles` are aliases for the same immutable tuples.
+
 To supply your own boundary coefficients, use the overload
 `compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5, backend=None)`.
 Each argument accepts a list, tuple, or one-dimensional NumPy array of finite

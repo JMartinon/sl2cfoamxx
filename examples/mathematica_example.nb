@@ -17,9 +17,9 @@ Cell[BoxData["BuildInfo[]"], "Input"],
 
 Cell["Boundary geometry", "Section"],
 
-Cell["The twenty {theta, phi} pairs below are in radians and describe a closed boundary. They follow the canonical oriented-normal order written in the cell. Each node has its own local frame.", "Text"],
+Cell["The built-in Euclidean preset supplies twenty {theta, phi} pairs in radians and closes for equal boundary spins. The Lorentzian preset is $LorentzianBoundaryAngles; it closes for doubled spins {10,10,10,10,4,4,4,4,4,4} and common positive scalings. Both follow canonical oriented-normal order, with a separate local frame at each node. Assign a preset to your own variable before editing.", "Text"],
 
-Cell[BoxData["(* Angles theta,phi in radians, in the canonical oriented-normal order:\n   n12,n13,n14,n15,n21,n23,n24,n25,n31,n32,n34,n35,\n   n41,n42,n43,n45,n51,n52,n53,n54. *)\n$SL2CfoamXXExampleAngles = {\n    {0.000000000000000, 0.000000000000000},\n    {1.910633236249019, 0.000000000000000},\n    {1.910633236249019, 2.094395102393196},\n    {1.910633236249019,-2.094395102393196},\n    {3.141592653589793, 0.000000000000000},\n    {1.230959417340775,-1.823476581936975},\n    {1.230959417340775, 0.270918520456220},\n    {1.230959417340775, 2.365313622849416},\n    {1.230959417340775, 3.141592653589793},\n    {1.910633236249019, 1.318116071652818},\n    {2.411864997362827,-1.435337066566786},\n    {0.729727656226966,-0.388139515370189},\n    {1.230959417340775,-1.047197551196598},\n    {1.910633236249019,-2.870674133133573},\n    {0.729727656226966, 1.706255587023007},\n    {2.411864997362827, 0.659058035826409},\n    {1.230959417340775, 1.047197551196598},\n    {1.910633236249019,-0.776279030740378},\n    {2.411864997362827, 2.753453138219605},\n    {0.729727656226966,-2.482534617763384}\n};"], "Input", InitializationCell -> True],
+Cell[BoxData["(* The library preset contains twenty {theta,phi} pairs in radians,\n   in canonical oriented-normal order. This copy can be edited locally. *)\n$SL2CfoamXXExampleAngles = $EuclideanBoundaryAngles;"], "Input", InitializationCell -> True],
 
 Cell["Complete calculation", "Section"],
 

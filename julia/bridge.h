@@ -143,6 +143,9 @@ SJX_API void sjx_progress_free(SJXProgressQueue*) SJX_NOEXCEPT;
  * backend==NULL selects the configured default; otherwise *backend is exact.
  * An explicit backend is required when Queue is non-NULL, as in Python.
  * Queue==NULL preserves ordinary native callback/default semantics. */
+/* Copy a native boundary preset into 40 interleaved theta,phi doubles.
+ * preset=0 selects Lorentzian; preset=1 selects Euclidean. */
+SJX_API SJXError* sjx_boundary_angles(int32_t preset, double* angles40) SJX_NOEXCEPT;
 SJX_API SJXError* sjx_indices_from_intertwiners(const int32_t* spins10,
     const int32_t* intertwiners5, uint64_t* indices5) SJX_NOEXCEPT;
 SJX_API SJXError* sjx_compute_amplitude(const int32_t* spins10,
