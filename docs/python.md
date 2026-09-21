@@ -202,8 +202,7 @@ angles = np.array(sf.euclidean_boundary_angles, dtype=np.float64, copy=True)
 The Euclidean preset closes for equal spins; the Lorentzian preset matches
 the doubled-spin pattern `[10,10,10,10,4,4,4,4,4,4]` and its uniform rescalings.
 The constants contain only angles and do not select spins, `gamma`, or the
-simplicity constraint. The alternate spellings `euclidean_bounday_angles` and
-`lorentzian_bounday_angles` are aliases for the same immutable tuples.
+simplicity constraint.
 
 To supply your own boundary coefficients, use the overload
 `compute_coherent_amplitude(spins, Dl, gamma, C1, C2, C3, C4, C5, backend=None)`.

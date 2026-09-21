@@ -108,7 +108,6 @@ WithCleanup[Null,
         {0.729727656226966,-0.388139515370189},
         {2.411864997362827,0.659058035826409},
         {0.729727656226966,-2.482534617763384}}];
-    assert["preset spelling aliases", $LorentzianBoundayAngles === lorentzian && $EuclideanBoundayAngles === euclidean];
     modifiedPreset = euclidean; modifiedPreset[[1,1]] = -1.;
     assert["preset copy isolation", euclidean[[1,1]] === 0. && $EuclideanBoundaryAngles === euclidean];
     assert["Lorentzian preset closure", CheckClosure[lorentzianSpins,lorentzian]["AllClosed"]];

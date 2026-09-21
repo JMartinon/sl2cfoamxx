@@ -146,8 +146,7 @@ editable_angles = [angles[row][column] for row in 1:20, column in 1:2]
 
 The Euclidean preset closes for equal spins; the Lorentzian preset closes for
 the doubled-spin proportions shown above. These presets do not change the
-spin or angle conventions. The spellings `lorentzian_bounday_angles` and
-`euclidean_bounday_angles` are aliases for the same tuples.
+spin or angle conventions.
 
 To supply the boundary coefficients directly, pass five vectors (or tuples)
 of real or complex numbers. Each is copied to `Vector{ComplexF64}`, including

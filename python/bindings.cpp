@@ -44,8 +44,6 @@ void bind_boundary_angle_presets(nb::module_& m)
         as_tuple(s::lorentzian_boundary_angles);
     m.attr("euclidean_boundary_angles") =
         as_tuple(s::euclidean_boundary_angles);
-    m.attr("lorentzian_bounday_angles") = m.attr("lorentzian_boundary_angles");
-    m.attr("euclidean_bounday_angles") = m.attr("euclidean_boundary_angles");
 }
 
 // The Python argument owns the callable until the synchronous C++ call and

@@ -137,8 +137,7 @@ closes for the doubled-spin pattern above and common positive scalings of
 it. They are fixed boundary geometries, so closure is not guaranteed for
 arbitrary spins. Both use canonical oriented-normal order and come directly
 from the C++ library. Assign a preset to a variable, then edit your copy as
-needed; editing `angles` does not change the library preset. The alternate
-spellings `$LorentzianBoundayAngles` and `$EuclideanBoundayAngles` are aliases.
+needed; editing `angles` does not change the library preset.
 
 ```wl
 closure = CheckClosure[spins, angles];

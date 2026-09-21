@@ -190,7 +190,6 @@ class PythonApiTest(unittest.TestCase):
                             ("euclidean", [1] * 10)):
             with self.subTest(preset=name):
                 angles = getattr(foam, f"{name}_boundary_angles")
-                self.assertIs(angles, getattr(foam, f"{name}_bounday_angles"))
                 self.assertIsInstance(angles, tuple)
                 self.assertEqual(len(angles), 20)
                 for row in angles:

@@ -430,11 +430,9 @@ void check_coherent_workflows(const sl2cfoamxx::LibraryConfig& initial)
                     8.549823132047453e-8) <= 1.0e-5,
                 "independent mixed-parity tensor reference mismatch");
     }
-    static_assert(lorentzian_bounday_angles == lorentzian_boundary_angles);
-    static_assert(euclidean_bounday_angles == euclidean_boundary_angles);
     require(euclidean_boundary_angles == euclidean_angles,
             "Euclidean preset differs from retained boundary data");
-    auto editable_angles = lorentzian_bounday_angles;
+    auto editable_angles = lorentzian_boundary_angles;
     editable_angles[0][0] = 0.0;
     require(lorentzian_boundary_angles[0][0] == 1.570796326794897,
             "editing a preset copy changed the public constant");

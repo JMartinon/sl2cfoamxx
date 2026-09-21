@@ -88,8 +88,6 @@ mktempdir() do directory
         euclidean = sf.euclidean_boundary_angles
         @test lorentzian isa NTuple{20,NTuple{2,Float64}}
         @test euclidean isa NTuple{20,NTuple{2,Float64}}
-        @test lorentzian === sf.lorentzian_bounday_angles
-        @test euclidean === sf.euclidean_bounday_angles
         @test lorentzian_boundary_angles === lorentzian
         @test euclidean_boundary_angles === euclidean
         @test lorentzian[1] == (1.570796326794897, 0.0)

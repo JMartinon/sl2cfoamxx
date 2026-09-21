@@ -71,8 +71,7 @@ other_angles[0][0] = 0.1; // Only this copy changes.
 ```
 
 The constants are `inline constexpr BoundaryAngles`; copying them requires
-no library initialization. `lorentzian_bounday_angles` and
-`euclidean_bounday_angles` are aliases for the same immutable values.
+no library initialization.
 The Lorentzian geometry closes for face-spin ratios `(5,5,5,5,2,2,2,2,2,2)`;
 the Euclidean geometry closes for equal face spins. They are fixed boundary
 data, so choosing a preset does not change the model, backend, or configuration.

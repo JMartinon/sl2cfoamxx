@@ -89,12 +89,6 @@ inline constexpr BoundaryAngles euclidean_boundary_angles{{
     {{0.729727656226966, -2.482534617763384}}, // n54
 }};
 
-// Alternate spellings for the same immutable presets.
-inline constexpr const BoundaryAngles& lorentzian_bounday_angles =
-    lorentzian_boundary_angles;
-inline constexpr const BoundaryAngles& euclidean_bounday_angles =
-    euclidean_boundary_angles;
-
 // Coefficients are ordered by ascending admissible doubled intertwiner,
 // starting at max(|J1-J2|,|J3-J4|) (adjusted for parity), ending at
 // min(J1+J2,J3+J4), and advancing in steps of two.

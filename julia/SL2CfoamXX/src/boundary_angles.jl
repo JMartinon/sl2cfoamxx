@@ -21,11 +21,6 @@ This boundary closes for equal spins. Pass it directly to
 """
 global euclidean_boundary_angles::NTuple{20,NTuple{2,Float64}}
 
-"""Compatibility spelling of `lorentzian_boundary_angles`."""
-global lorentzian_bounday_angles::NTuple{20,NTuple{2,Float64}}
-"""Compatibility spelling of `euclidean_boundary_angles`."""
-global euclidean_bounday_angles::NTuple{20,NTuple{2,Float64}}
-
 function _boundary_angles_preset(preset::Int32)
     values = Vector{Float64}(undef, 40)
     _check_error(ccall(_sym(:sjx_boundary_angles), Ptr{Cvoid},
@@ -38,7 +33,5 @@ function _initialize_boundary_angles!()
     # a precompiled or relocated package. No foreign call runs at compile time.
     global lorentzian_boundary_angles = _boundary_angles_preset(Int32(0))
     global euclidean_boundary_angles = _boundary_angles_preset(Int32(1))
-    global lorentzian_bounday_angles = lorentzian_boundary_angles
-    global euclidean_bounday_angles = euclidean_boundary_angles
     return nothing
 end

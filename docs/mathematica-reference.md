@@ -24,8 +24,7 @@ These values are packed machine-real arrays with shape `{20,2}` containing
 the native bridge from the public C++ constants, so they require a loadable
 bridge. Assign a value to a variable before editing: `angles =
 $EuclideanBoundaryAngles; angles[[1,1]] = .2` changes only your copy. The
-symbols `$LorentzianBoundayAngles` and `$EuclideanBoundayAngles` provide spelling
-aliases. They supply fixed example data, do not generate angles for arbitrary
+presets supply fixed example data, do not generate angles for arbitrary
 spins, and do not change the configured backend or simplicity convention.
 
 ## Coherent inputs
