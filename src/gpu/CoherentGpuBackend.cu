@@ -50,7 +50,7 @@ using coherent_cutensor_detail::TensorSpec;
 
 constexpr int maximum_safe_doubled_spin = std::numeric_limits<int>::max() - 2;
 constexpr std::size_t maximum_pipeline_slots = 3;
-constexpr std::uint64_t q_slab_fused_b_tile = 128;
+constexpr std::uint64_t q_slab_fused_b_tile = 16;
 constexpr std::uint64_t q_slab_fused_reduce_blocks = 1024;
 
 inline void check_cublas(cublasStatus_t status, const char *operation) {

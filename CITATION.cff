@@ -10,8 +10,8 @@ authors:
     given-names: "Jeremy"
     orcid: "https://orcid.org/0009-0005-9908-9344"
 
-version: "1.0.2"
-date-released: 2026-09-21
+version: "1.0.3"
+date-released: 2026-10-19
 
 repository-code: "https://github.com/JMartinon/sl2cfoamxx"
 
