@@ -89,7 +89,7 @@ WithCleanup[Null,
     assert["default association", AssociationQ[defaults]];
     If[!AssociationQ[defaults], Print[defaults]; Exit[1]];
     assert["native version", LibraryVersion[] === BuildInfo[]["Version"]];
-    assert["version value", LibraryVersion[] === "1.0.2"];
+    assert["version value", LibraryVersion[] === "1.0.3"];
     lorentzian = $LorentzianBoundaryAngles;
     euclidean = $EuclideanBoundaryAngles;
     lorentzianSpins = {10,10,10,10,4,4,4,4,4,4};
