@@ -42,17 +42,15 @@ for ordering, tensor indices, and numerical options.
 
 ## Performance
 
-Representative benchmarks against `sl2cfoam-next`.<sup>[1](#benchmark-workstation)</sup>
+Representative benchmarks against historical `sl2cfoam-next`.<sup>[1](#benchmark-workstation)</sup>
 
-All boundary spins are homogeneous with $j$=10, for the single-amplitude benchmark, all five intertwiners are $i$=20.
+All boundary spins are homogeneous with physical spin \(j=10\) and \(\gamma=1.2\). For the single-amplitude benchmark, all five intertwiners are \(i=20\).
 
-| Computation | Configuration | `sl2cfoam-next` | `sl2cfoam++` | Speedup |
-|---|---|---:|---:|---:|
-| **Single amplitude** | $j$=10, $i$=20, $\Delta\ell$=27 | 12 h 20 min | **518 ms** | **~85,000×** |
-| **Full vertex tensor** | $j$=10, $\Delta\ell$=11 | 11 h 14 min | **41.2 s** | **~1000×** |
-| **Coherent amplitude** | $j$=10, $\Delta\ell$=12 | 17 h 52 min | **738 ms** | **~87,000×** |
-
-The single-amplitude comparison is **CPU vs CPU**. Full-tensor and coherent-amplitude results compare the CPU implementation of `sl2cfoam-next` with the **GPU backend** of `sl2cfoam++`.
+| Computation | \(\Delta\ell\) | `sl2cfoam-next` CPU | `sl2cfoam++` CPU | `sl2cfoam++` GPU | Speedup CPU / GPU |
+|---|---:|---:|---:|---:|---:|
+| **Single amplitude** | 27 | 12 h 20 min | **506 ms** | — | **~88,000× / —** |
+| **Full vertex tensor** | 12 | 17 h 52 min | **109.7 s** | **64.4 s** | **~600× / ~1000×** |
+| **Coherent amplitude** | 12 | 17 h 52 min | **445 ms** | **323 ms** | **~140,000× / ~200,000×** |
 
 <a name="benchmark-workstation"></a>
 <sub>**1. Benchmark workstation:** AMD Ryzen 9 9950X3D2 Dual Edition · 64 GB DDR5 RAM · NVIDIA V100 32 GB GPU</sub>
