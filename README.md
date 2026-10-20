@@ -44,7 +44,7 @@ for ordering, tensor indices, and numerical options.
 
 Representative benchmarks against historical `sl2cfoam-next`.<sup>[1](#benchmark-workstation)</sup>
 
-All boundary spins are homogeneous with physical spin $j=10$ and $\gamma=1.2$. For the single-amplitude benchmark, all five intertwiners are $i=20$.
+All boundary spins are homogeneous with physical spin $j$=10 and $\gamma$=1.2. For the single-amplitude benchmark, all five intertwiners are $i$=20.
 
 | Computation | $\Delta\ell$ | `sl2cfoam-next` CPU | `sl2cfoam++` CPU | `sl2cfoam++` GPU | Speedup CPU / GPU |
 |---|---:|---:|---:|---:|---:|
