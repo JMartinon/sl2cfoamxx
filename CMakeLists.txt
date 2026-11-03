@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.22)
 include(cmake/SelectMacOSGNU.cmake)
 
 project(sl2cfoamxx
-  VERSION 1.0.3
+  VERSION 1.1.0
   DESCRIPTION "High-performance sl2cfoam++ vertex amplitudes and tensors"
   LANGUAGES CXX
 )
@@ -516,6 +516,14 @@ endif()
 # ==============================================================================
 
 if(BUILD_TESTING)
+  add_executable(test_booster_recurrence tests/test_booster_recurrence.cpp)
+  target_include_directories(test_booster_recurrence PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  target_link_libraries(test_booster_recurrence PRIVATE
+    sl2cfoamxx::sl2cfoamxx OpenMP::OpenMP_CXX)
+  add_test(NAME booster_recurrence COMMAND test_booster_recurrence)
+  set_tests_properties(booster_recurrence PROPERTIES
+    LABELS "cpu;numerical" ENVIRONMENT "OMP_NUM_THREADS=2" TIMEOUT 60)
+
   add_executable(test_public_api tests/test_public_api.cpp)
   target_link_libraries(test_public_api PRIVATE
     sl2cfoamxx::sl2cfoamxx OpenMP::OpenMP_CXX)

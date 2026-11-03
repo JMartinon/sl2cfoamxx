@@ -527,7 +527,12 @@ struct PureGeomCacheZ {
 
                     PureGeomEntryZ e{0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-                    if (canJ1 && radJ1 > 0.0) {
+                    // When both lowering identities apply, lower the leg farther
+                    // above its own minimum. Ties keep the original first route.
+                    const bool first_available = canJ1 && radJ1 > 0.0;
+                    const bool second_available = canJ2 && radJ2 > 0.0;
+                    const bool prefer_first = DJ1 - Dnu1 >= DJ2 - Dnu2;
+                    if (first_available && (!second_available || prefer_first)) {
                         e.branch = 1;
 
                         e.inv_lhs =
@@ -561,7 +566,7 @@ struct PureGeomCacheZ {
                                   std::sqrt((2.0 * J2 + 1.0) / (2.0 * J2 - 1.0)) *
                                   std::sqrt((J + jj1 - J2 + 1.0) * (-J + jj1 + J2))
                                 : 0.0;
-                    } else if (canJ2 && radJ2 > 0.0) {
+                    } else if (second_available) {
                         e.branch = 2;
 
                         e.inv_lhs =

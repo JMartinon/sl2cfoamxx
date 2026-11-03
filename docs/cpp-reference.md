@@ -330,6 +330,11 @@ shape, physics input, or dense/compact layout is rejected without being
 overwritten. Set `tensors.reuse_existing=false` to authorize its atomic
 replacement; a subsequent compatible call can then reuse it.
 
+Version 1.1.0 uses a balanced recurrence for booster coefficients at large
+spin lifts. Existing tensor files retain their stored values. To regenerate
+a tensor computed with an earlier version, set `tensors.reuse_existing=false`
+for the first computation, then re-enable reuse.
+
 Files created before the simplicity option existed used `gamma_j`; their binary
 tags are still compatible. Early public full-tensor caches were dense and
 used the unsuffixed `Dl_N.sl2cxx` name used by `on_disk_dense`. To reuse an
