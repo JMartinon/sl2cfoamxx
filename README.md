@@ -157,6 +157,9 @@ article's `preferred-citation` are maintained in [CITATION.cff](CITATION.cff).
 The article citation will become the preferred citation once its details are
 confirmed; a software-archive DOI can identify the exact release separately.
 
+This work has been supported by the National Science Foundation under Grant No.2409018.
+
+
 ## License
 
 **sl2cfoam++** is free software distributed under the terms of the **GNU General Public License v3.0 or later (GPL-3.0-or-later)**.
